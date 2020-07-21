@@ -201,7 +201,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (_useGranular)
             {
-                _memoryTrackingGranular.QueryModified(address, size, _modifiedDelegate, _context.SequenceNumber);
+                if (Size == size)
+                {
+                    _memoryTrackingGranular.QueryModified(_modifiedDelegate);
+                }
+                else
+                {
+                    _memoryTrackingGranular.QueryModified(address, size, _modifiedDelegate, _context.SequenceNumber);
+                }
             }
             else
             {
@@ -436,7 +443,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <returns>The page aligned address and size</returns>
         private static (ulong address, ulong size) PageAlign(ulong address, ulong size)
         {
-            ulong pageMask = MemoryManager.PageMask;
+            ulong pageMask = 4096 * 16 - 1;
             ulong rA = address & ~pageMask;
             ulong rS = ((address + size + pageMask) & ~pageMask) - rA;
             return (rA, rS);

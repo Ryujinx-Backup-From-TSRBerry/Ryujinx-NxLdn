@@ -525,7 +525,12 @@ namespace Ryujinx.Headless.SDL2
                                                                   options.MemoryManagerMode,
                                                                   (bool)options.IgnoreMissingServices,
                                                                   options.AspectRatio,
-                                                                  options.AudioVolume);
+                                                                  options.AudioVolume,
+                                                                  Common.Configuration.Multiplayer.MultiplayerMode.Disabled,
+                                                                  false,
+                                                                  "",
+                                                                  ""
+                                                                  );
 
             return new Switch(configuration);
         }

@@ -9,15 +9,20 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Npdm;
+using Ryujinx.Ui.Common.App;
+using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Configuration.System;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -123,7 +128,7 @@ namespace Ryujinx.Ui.App.Common
             controlFile.Get.Read(out _, 0, outProperty, ReadOption.None).ThrowIfFailure();
         }
 
-        public void LoadApplications(List<string> appDirs, Language desiredTitleLanguage)
+        public async void LoadApplications(List<string> appDirs, Language desiredTitleLanguage)
         {
             int numApplicationsFound  = 0;
             int numApplicationsLoaded = 0;
@@ -170,6 +175,24 @@ namespace Ryujinx.Ui.App.Common
                             applications.Add(app);
                             numApplicationsFound++;
                         }
+                    }
+                }
+
+                IEnumerable<LdnGameData> ldnGameDataArray = new LdnGameData[0];
+
+                if (ConfigurationState.Instance.Multiplayer.Mode == MultiplayerMode.RyuLdn)
+                {
+                    try
+                    {
+                        using HttpClient httpClient = new HttpClient();
+
+                        string ldnGameDataArrayString = await httpClient.GetStringAsync("https://ldn.ryujinx.org/api/public_games");
+
+                        ldnGameDataArray = JsonHelper.Deserialize<IEnumerable<LdnGameData>>(ldnGameDataArrayString);
+                    }
+                    catch
+                    {
+                        Logger.Warning?.Print(LogClass.Application, "Failed to fetch the public games JSON from the API. Player and game count in the game list will be unavailable.");
                     }
                 }
 
@@ -446,6 +469,8 @@ namespace Ryujinx.Ui.App.Common
 
                     ApplicationMetadata appMetadata = LoadAndSaveMetaData(titleId);
 
+                    IEnumerable<LdnGameData> ldnGameData = ldnGameDataArray.Where(game => controlHolder.Value.LocalCommunicationId.Items.Contains(Convert.ToUInt64(game.TitleId, 16)));
+
                     if (appMetadata.LastPlayed != "Never" && !DateTime.TryParse(appMetadata.LastPlayed, out _))
                     {
                         Logger.Warning?.Print(LogClass.Application, $"Last played datetime \"{appMetadata.LastPlayed}\" is invalid for current system culture, skipping (did current culture change?)");
@@ -461,6 +486,8 @@ namespace Ryujinx.Ui.App.Common
                         TitleId = titleId,
                         Developer = developer,
                         Version = version,
+                        PlayerCount = ldnGameData.Sum(game => game.PlayerCount),
+                        GameCount = ldnGameData.Count(),
                         TimePlayed = ConvertSecondsToReadableString(appMetadata.TimePlayed),
                         LastPlayed = appMetadata.LastPlayed,
                         FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0, 1),

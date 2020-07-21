@@ -16,6 +16,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Graphics.OpenGL;
@@ -116,6 +117,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem   _appToggle;
         [GUI] CheckMenuItem   _timePlayedToggle;
         [GUI] CheckMenuItem   _versionToggle;
+        [GUI] CheckMenuItem   _ldnInfoToggle;
         [GUI] CheckMenuItem   _lastPlayedToggle;
         [GUI] CheckMenuItem   _fileExtToggle;
         [GUI] CheckMenuItem   _pathToggle;
@@ -208,6 +210,12 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Graphics.AspectRatio.Event         += UpdateAspectRatioState;
             ConfigurationState.Instance.System.EnableDockedMode.Event      += UpdateDockedModeState;
             ConfigurationState.Instance.System.AudioVolume.Event           += UpdateAudioVolumeState;
+            ConfigurationState.Instance.System.EnableInternetAccess.Event  += UpdateEnableInternetAccess;
+
+            ConfigurationState.Instance.Multiplayer.Mode.Event           += UpdateMultiplayerMode;
+            ConfigurationState.Instance.Multiplayer.LdnPassphrase.Event  += UpdateMultiplayerPassphrase;
+            ConfigurationState.Instance.Multiplayer.LanInterfaceId.Event += UpdateMultiplayerLanInterfaceId;
+            ConfigurationState.Instance.Multiplayer.DisableP2p.Event     += UpdateMultiplayerDisableP2p;
 
             if (ConfigurationState.Instance.Ui.StartFullscreen)
             {
@@ -221,16 +229,17 @@ namespace Ryujinx.Ui
             _pauseEmulation.Sensitive = false;
             _resumeEmulation.Sensitive = false;
 
-            if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active       = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.AppColumn)        _appToggle.Active        = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.DevColumn)        _developerToggle.Active  = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.VersionColumn)    _versionToggle.Active    = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.TimePlayedColumn) _timePlayedToggle.Active = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.LastPlayedColumn) _lastPlayedToggle.Active = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.FileExtColumn)    _fileExtToggle.Active    = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   _fileSizeToggle.Active   = true;
-            if (ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       _pathToggle.Active       = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active         = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active        = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.AppColumn)        _appToggle.Active         = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.VersionColumn)    _versionToggle.Active     = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.LdnInfoColumn)    _ldnInfoToggle.Active     = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.DevColumn)        _developerToggle.Active   = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.TimePlayedColumn) _timePlayedToggle.Active  = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.LastPlayedColumn) _lastPlayedToggle.Active  = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.FileExtColumn)    _fileExtToggle.Active     = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   _fileSizeToggle.Active    = true;
+            if (ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       _pathToggle.Active        = true;
 
             _favToggle.Toggled        += Fav_Toggled;
             _iconToggle.Toggled       += Icon_Toggled;
@@ -244,21 +253,22 @@ namespace Ryujinx.Ui
             _pathToggle.Toggled       += Path_Toggled;
 
             _gameTable.Model = _tableStore = new ListStore(
-                typeof(bool),
-                typeof(Gdk.Pixbuf),
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                typeof(BlitStruct<ApplicationControlProperty>));
+                typeof(bool),       // Favorite
+                typeof(Gdk.Pixbuf), // Icon
+                typeof(string),     // Title Name/ID
+                typeof(string),     // Version
+                typeof(string),     // Ldn Info
+                typeof(string),     // Developer
+                typeof(string),     // Time Played
+                typeof(string),     // Last Played
+                typeof(string),     // File Extension
+                typeof(string),     // File Size
+                typeof(string),     // File Path
+                typeof(BlitStruct<ApplicationControlProperty>)); // Control Holder
 
-            _tableStore.SetSortFunc(5, SortHelper.TimePlayedSort);
-            _tableStore.SetSortFunc(6, SortHelper.LastPlayedSort);
-            _tableStore.SetSortFunc(8, SortHelper.FileSizeSort);
+            _tableStore.SetSortFunc(6, TimePlayedSort);
+            _tableStore.SetSortFunc(7, LastPlayedSort);
+            _tableStore.SetSortFunc(9, FileSizeSort);
 
             int  columnId  = ConfigurationState.Instance.Ui.ColumnSort.SortColumnId;
             bool ascending = ConfigurationState.Instance.Ui.ColumnSort.SortAscending;
@@ -282,9 +292,57 @@ namespace Ryujinx.Ui
                 }
             };
 
+            ConfigurationState.Instance.Multiplayer.Mode.Event += (sender, args) =>
+            {
+                if (args.OldValue != args.NewValue)
+                {
+                    UpdateColumns();
+                }
+            };
+
             Task.Run(RefreshFirmwareLabel);
 
             InputManager = new InputManager(new GTK3KeyboardDriver(this), new SDL2GamepadDriver());
+        }
+
+        private void UpdateMultiplayerDisableP2p(object sender, ReactiveEventArgs<bool> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.MultiplayerDisableP2p = args.NewValue;
+            }
+        }
+
+        private void UpdateMultiplayerLanInterfaceId(object sender, ReactiveEventArgs<string> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.MultiplayerLanInterfaceId = args.NewValue;
+            }
+        }
+
+        private void UpdateEnableInternetAccess(object sender, ReactiveEventArgs<bool> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.EnableInternetAccess = args.NewValue;
+            }
+        }
+
+        private void UpdateMultiplayerPassphrase(object sender, ReactiveEventArgs<string> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.MultiplayerLdnPassphrase = args.NewValue;
+            }
+        }
+
+        private void UpdateMultiplayerMode(object sender, ReactiveEventArgs<MultiplayerMode> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.MultiplayerMode = args.NewValue;
+            }
         }
 
         private void UpdateIgnoreMissingServicesState(object sender, ReactiveEventArgs<bool> args)
@@ -341,16 +399,23 @@ namespace Ryujinx.Ui
             CellRendererToggle favToggle = new CellRendererToggle();
             favToggle.Toggled += FavToggle_Toggled;
 
-            if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _gameTable.AppendColumn("Fav",         favToggle,                "active", 0);
-            if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _gameTable.AppendColumn("Icon",        new CellRendererPixbuf(), "pixbuf", 1);
-            if (ConfigurationState.Instance.Ui.GuiColumns.AppColumn)        _gameTable.AppendColumn("Application", new CellRendererText(),   "text",   2);
-            if (ConfigurationState.Instance.Ui.GuiColumns.DevColumn)        _gameTable.AppendColumn("Developer",   new CellRendererText(),   "text",   3);
-            if (ConfigurationState.Instance.Ui.GuiColumns.VersionColumn)    _gameTable.AppendColumn("Version",     new CellRendererText(),   "text",   4);
-            if (ConfigurationState.Instance.Ui.GuiColumns.TimePlayedColumn) _gameTable.AppendColumn("Time Played", new CellRendererText(),   "text",   5);
-            if (ConfigurationState.Instance.Ui.GuiColumns.LastPlayedColumn) _gameTable.AppendColumn("Last Played", new CellRendererText(),   "text",   6);
-            if (ConfigurationState.Instance.Ui.GuiColumns.FileExtColumn)    _gameTable.AppendColumn("File Ext",    new CellRendererText(),   "text",   7);
-            if (ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   _gameTable.AppendColumn("File Size",   new CellRendererText(),   "text",   8);
-            if (ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       _gameTable.AppendColumn("Path",        new CellRendererText(),   "text",   9);
+            if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)     _gameTable.AppendColumn("Fav",         favToggle,                "active", 0);
+            if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)    _gameTable.AppendColumn("Icon",        new CellRendererPixbuf(), "pixbuf", 1);
+            if (ConfigurationState.Instance.Ui.GuiColumns.AppColumn)     _gameTable.AppendColumn("Application", new CellRendererText(),   "text",   2);
+            if (ConfigurationState.Instance.Ui.GuiColumns.VersionColumn) _gameTable.AppendColumn("Version",     new CellRendererText(),   "text",   3);
+
+            if (ConfigurationState.Instance.Multiplayer.Mode.Value != MultiplayerMode.Disabled
+                && ConfigurationState.Instance.Ui.GuiColumns.LdnInfoColumn)
+            {
+                _gameTable.AppendColumn("LDN Info", new CellRendererText(), "text", 4);
+            }
+
+            if (ConfigurationState.Instance.Ui.GuiColumns.DevColumn)        _gameTable.AppendColumn("Developer",   new CellRendererText(),   "text",   5);
+            if (ConfigurationState.Instance.Ui.GuiColumns.TimePlayedColumn) _gameTable.AppendColumn("Time Played", new CellRendererText(),   "text",   6);
+            if (ConfigurationState.Instance.Ui.GuiColumns.LastPlayedColumn) _gameTable.AppendColumn("Last Played", new CellRendererText(),   "text",   7);
+            if (ConfigurationState.Instance.Ui.GuiColumns.FileExtColumn)    _gameTable.AppendColumn("File Ext",    new CellRendererText(),   "text",   8);
+            if (ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   _gameTable.AppendColumn("File Size",   new CellRendererText(),   "text",   9);
+            if (ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       _gameTable.AppendColumn("Path",        new CellRendererText(),   "text",   10);
 
             foreach (TreeViewColumn column in _gameTable.Columns)
             {
@@ -364,32 +429,36 @@ namespace Ryujinx.Ui
                         column.SortColumnId = 2;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "Developer":
+                    case "Version":
                         column.SortColumnId = 3;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "Version":
+                    case "LDN Info":
                         column.SortColumnId = 4;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "Time Played":
+                    case "Developer":
                         column.SortColumnId = 5;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "Last Played":
+                    case "Time Played":
                         column.SortColumnId = 6;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "File Ext":
+                    case "Last Played":
                         column.SortColumnId = 7;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "File Size":
+                    case "File Ext":
                         column.SortColumnId = 8;
                         column.Clicked += Column_Clicked;
                         break;
-                    case "Path":
+                    case "File Size":
                         column.SortColumnId = 9;
+                        column.Clicked += Column_Clicked;
+                        break;
+                    case "Path":
+                        column.SortColumnId = 10;
                         column.Clicked += Column_Clicked;
                         break;
                 }
@@ -576,7 +645,12 @@ namespace Ryujinx.Ui
                                                                           ConfigurationState.Instance.System.MemoryManagerMode,
                                                                           ConfigurationState.Instance.System.IgnoreMissingServices,
                                                                           ConfigurationState.Instance.Graphics.AspectRatio,
-                                                                          ConfigurationState.Instance.System.AudioVolume);
+                                                                          ConfigurationState.Instance.System.AudioVolume,
+                                                                          ConfigurationState.Instance.Multiplayer.Mode,
+                                                                          ConfigurationState.Instance.Multiplayer.DisableP2p,
+                                                                          ConfigurationState.Instance.Multiplayer.LdnPassphrase,
+                                                                          ConfigurationState.Instance.Multiplayer.LanInterfaceId
+                                                                          );
 
             _emulationContext = new HLE.Switch(configuration);
         }
@@ -1083,18 +1157,20 @@ namespace Ryujinx.Ui
         {
             Application.Invoke(delegate
             {
+                var data = args.AppData;
                 _tableStore.AppendValues(
-                    args.AppData.Favorite,
-                    new Gdk.Pixbuf(args.AppData.Icon, 75, 75),
-                    $"{args.AppData.TitleName}\n{args.AppData.TitleId.ToUpper()}",
-                    args.AppData.Developer,
-                    args.AppData.Version,
-                    args.AppData.TimePlayed,
-                    args.AppData.LastPlayed,
-                    args.AppData.FileExtension,
-                    args.AppData.FileSize,
-                    args.AppData.Path,
-                    args.AppData.ControlHolder);
+                    data.Favorite,
+                    new Gdk.Pixbuf(data.Icon, 75, 75),
+                    $"{data.TitleName}\n{data.TitleId.ToUpper()}",
+                    data.Version,
+                    (data.GameCount == 0 && data.PlayerCount == 0) ? "N/A" : $"Hosted Games: {data.GameCount}\nOnline Players: {data.PlayerCount}",
+                    data.Developer,
+                    data.TimePlayed,
+                    data.LastPlayed,
+                    data.FileExtension,
+                    data.FileSize,
+                    data.Path,
+                    data.ControlHolder);
             });
         }
 
@@ -1174,7 +1250,7 @@ namespace Ryujinx.Ui
         {
             _gameTableSelection.GetSelected(out TreeIter treeIter);
 
-            string path = (string)_tableStore.GetValue(treeIter, 9);
+            string path = (string)_tableStore.GetValue(treeIter, 10);
 
             LoadApplication(path);
         }
@@ -1238,7 +1314,7 @@ namespace Ryujinx.Ui
             string titleName     = _tableStore.GetValue(treeIter, 2).ToString().Split("\n")[0];
             string titleId       = _tableStore.GetValue(treeIter, 2).ToString().Split("\n")[1].ToLower();
 
-            BlitStruct<ApplicationControlProperty> controlData = (BlitStruct<ApplicationControlProperty>)_tableStore.GetValue(treeIter, 10);
+            BlitStruct<ApplicationControlProperty> controlData = (BlitStruct<ApplicationControlProperty>)_tableStore.GetValue(treeIter, 11);
 
             _ = new GameTableContextMenu(this, _virtualFileSystem, _accountManager, _libHacHorizonManager.RyujinxClient, titleFilePath, titleName, titleId, controlData);
         }
@@ -1691,17 +1767,25 @@ namespace Ryujinx.Ui
             UpdateColumns();
         }
 
-        private void Developer_Toggled(object sender, EventArgs args)
+        private void Version_Toggled(object sender, EventArgs args)
         {
-            ConfigurationState.Instance.Ui.GuiColumns.DevColumn.Value = _developerToggle.Active;
+            ConfigurationState.Instance.Ui.GuiColumns.VersionColumn.Value = _versionToggle.Active;
 
             SaveConfig();
             UpdateColumns();
         }
 
-        private void Version_Toggled(object sender, EventArgs args)
+        private void LdnInfo_Toggled(object sender, EventArgs args)
         {
-            ConfigurationState.Instance.Ui.GuiColumns.VersionColumn.Value = _versionToggle.Active;
+            ConfigurationState.Instance.Ui.GuiColumns.LdnInfoColumn.Value = _ldnInfoToggle.Active;
+
+            SaveConfig();
+            UpdateColumns();
+        }
+
+        private void Developer_Toggled(object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.GuiColumns.DevColumn.Value = _developerToggle.Active;
 
             SaveConfig();
             UpdateColumns();
@@ -1750,6 +1834,114 @@ namespace Ryujinx.Ui
         private void RefreshList_Pressed(object sender, ButtonReleaseEventArgs args)
         {
             UpdateGameTable();
+        }
+
+        private static int TimePlayedSort(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            string aValue = model.GetValue(a, 6).ToString();
+            string bValue = model.GetValue(b, 6).ToString();
+
+            if (aValue.Length > 4 && aValue.Substring(aValue.Length - 4) == "mins")
+            {
+                aValue = (float.Parse(aValue.Substring(0, aValue.Length - 5)) * 60).ToString();
+            }
+            else if (aValue.Length > 3 && aValue.Substring(aValue.Length - 3) == "hrs")
+            {
+                aValue = (float.Parse(aValue.Substring(0, aValue.Length - 4)) * 3600).ToString();
+            }
+            else if (aValue.Length > 4 && aValue.Substring(aValue.Length - 4) == "days")
+            {
+                aValue = (float.Parse(aValue.Substring(0, aValue.Length - 5)) * 86400).ToString();
+            }
+            else
+            {
+                aValue = aValue.Substring(0, aValue.Length - 1);
+            }
+
+            if (bValue.Length > 4 && bValue.Substring(bValue.Length - 4) == "mins")
+            {
+                bValue = (float.Parse(bValue.Substring(0, bValue.Length - 5)) * 60).ToString();
+            }
+            else if (bValue.Length > 3 && bValue.Substring(bValue.Length - 3) == "hrs")
+            {
+                bValue = (float.Parse(bValue.Substring(0, bValue.Length - 4)) * 3600).ToString();
+            }
+            else if (bValue.Length > 4 && bValue.Substring(bValue.Length - 4) == "days")
+            {
+                bValue = (float.Parse(bValue.Substring(0, bValue.Length - 5)) * 86400).ToString();
+            }
+            else
+            {
+                bValue = bValue.Substring(0, bValue.Length - 1);
+            }
+
+            if (float.Parse(aValue) > float.Parse(bValue))
+            {
+                return -1;
+            }
+            else if (float.Parse(bValue) > float.Parse(aValue))
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private static int LastPlayedSort(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            string aValue = model.GetValue(a, 7).ToString();
+            string bValue = model.GetValue(b, 7).ToString();
+
+            if (aValue == "Never")
+            {
+                aValue = DateTime.UnixEpoch.ToString();
+            }
+
+            if (bValue == "Never")
+            {
+                bValue = DateTime.UnixEpoch.ToString();
+            }
+
+            return DateTime.Compare(DateTime.Parse(bValue), DateTime.Parse(aValue));
+        }
+
+        private static int FileSizeSort(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            string aValue = model.GetValue(a, 9).ToString();
+            string bValue = model.GetValue(b, 9).ToString();
+
+            if (aValue.Substring(aValue.Length - 2) == "GB")
+            {
+                aValue = (float.Parse(aValue[0..^2]) * 1024).ToString();
+            }
+            else
+            {
+                aValue = aValue[0..^2];
+            }
+
+            if (bValue.Substring(bValue.Length - 2) == "GB")
+            {
+                bValue = (float.Parse(bValue[0..^2]) * 1024).ToString();
+            }
+            else
+            {
+                bValue = bValue[0..^2];
+            }
+
+            if (float.Parse(aValue) > float.Parse(bValue))
+            {
+                return -1;
+            }
+            else if (float.Parse(bValue) > float.Parse(aValue))
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 }

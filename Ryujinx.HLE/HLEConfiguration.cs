@@ -1,6 +1,7 @@
 ﻿using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -100,7 +101,7 @@ namespace Ryujinx.HLE
         /// <summary>
         /// Control if the guest application should be told that there is a Internet connection available.
         /// </summary>
-        internal readonly bool EnableInternetAccess;
+        public bool EnableInternetAccess { internal get; set; }
 
         /// <summary>
         /// Control LibHac's integrity check level.
@@ -153,10 +154,30 @@ namespace Ryujinx.HLE
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
 
-        public HLEConfiguration(VirtualFileSystem      virtualFileSystem,
-                                LibHacHorizonManager   libHacHorizonManager,
-                                ContentManager         contentManager,
-                                AccountManager         accountManager,
+        /// <summary>
+        /// Multiplayer Mode
+        /// </summary>
+        public MultiplayerMode MultiplayerMode { internal get; set; }
+
+        /// <summary>
+        /// Disable P2P mode
+        /// </summary>
+        public bool MultiplayerDisableP2p { internal get; set; }
+
+        /// <summary>
+        /// Multiplayer Passphrase
+        /// </summary>
+        public string MultiplayerLdnPassphrase { internal get; set; }
+
+        /// <summary>
+        /// Multiplayer LAN Interface ID (device GUID)
+        /// </summary>
+        public string MultiplayerLanInterfaceId { internal get; set; }
+
+        public HLEConfiguration(VirtualFileSystem virtualFileSystem,
+                                LibHacHorizonManager libHacHorizonManager,
+                                ContentManager contentManager,
+                                AccountManager accountManager,
                                 UserChannelPersistence userChannelPersistence,
                                 IRenderer              gpuRenderer,
                                 IHardwareDeviceDriver  audioDeviceDriver,
@@ -175,7 +196,11 @@ namespace Ryujinx.HLE
                                 MemoryManagerMode      memoryManagerMode,
                                 bool                   ignoreMissingServices,
                                 AspectRatio            aspectRatio,
-                                float                  audioVolume)
+                                float                  audioVolume,
+                                MultiplayerMode        multiplayerMode,
+                                bool                   multiplayerDisableP2p,
+                                string                 multiplayerLdnPassphrase,
+                                string                 multiplayerLanInterfaceId)
         {
             VirtualFileSystem      = virtualFileSystem;
             LibHacHorizonManager   = libHacHorizonManager;
@@ -200,6 +225,11 @@ namespace Ryujinx.HLE
             IgnoreMissingServices  = ignoreMissingServices;
             AspectRatio            = aspectRatio;
             AudioVolume            = audioVolume;
+
+            MultiplayerMode           = multiplayerMode;
+            MultiplayerDisableP2p     = multiplayerDisableP2p;
+            MultiplayerLdnPassphrase  = multiplayerLdnPassphrase;
+            MultiplayerLanInterfaceId = multiplayerLanInterfaceId;
         }
     }
 }

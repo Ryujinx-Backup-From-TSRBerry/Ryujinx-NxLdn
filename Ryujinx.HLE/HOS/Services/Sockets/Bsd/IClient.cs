@@ -1,6 +1,7 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Memory;
+using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Proxy;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -98,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 }
             }
 
-            ISocket newBsdSocket = new ManagedSocket(netDomain, (SocketType)type, protocol);
+            ISocket newBsdSocket = new ManagedSocket(netDomain, (SocketType)type, protocol, context.Device.Configuration.MultiplayerLanInterfaceId);
             newBsdSocket.Blocking = !creationFlags.HasFlag(BsdSocketCreationFlags.NonBlocking);
 
             LinuxError errno = LinuxError.SUCCESS;

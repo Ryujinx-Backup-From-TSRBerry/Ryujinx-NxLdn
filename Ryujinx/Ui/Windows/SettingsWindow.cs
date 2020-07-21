@@ -8,6 +8,7 @@ using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Graphics.Vulkan;
 using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using Ryujinx.Ui.Helper;
@@ -17,6 +18,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using GUI = Gtk.Builder.ObjectAttribute;
@@ -83,6 +86,13 @@ namespace Ryujinx.Ui.Windows
         [GUI] Adjustment      _systemTimeDaySpinAdjustment;
         [GUI] Adjustment      _systemTimeHourSpinAdjustment;
         [GUI] Adjustment      _systemTimeMinuteSpinAdjustment;
+        [GUI] ComboBoxText    _multiModeSelect;
+        [GUI] CheckButton     _multiP2pDisable;
+        [GUI] Entry           _multiLdnPassphraseEntry;
+        [GUI] Button          _multiLdnPassphraseRandom;
+        [GUI] Button          _multiLdnPassphraseClear;
+        [GUI] Label           _multiInvalidPassphraseLabel;
+        [GUI] ComboBoxText    _multiLanSelect;
         [GUI] CheckButton     _custThemeToggle;
         [GUI] Entry           _custThemePath;
         [GUI] ToggleButton    _browseThemePath;
@@ -144,6 +154,9 @@ namespace Ryujinx.Ui.Windows
                     GtkDialog.CreateInfoDialog("Warning - Backend Threading", "Ryujinx must be restarted after changing this option for it to apply fully. Depending on your platform, you may need to manually disable your driver's own multithreading when using Ryujinx's.");
                 }
             };
+            _multiLdnPassphraseEntry.Changed += (sender, args) => ValidateLdnPassphrase();
+            _multiLdnPassphraseRandom.Clicked += ClickRandomPassphrase;
+            _multiLdnPassphraseClear.Clicked += ClearRandomPassphrase;
 
             // Setup Currents.
             if (ConfigurationState.Instance.Logger.EnableTrace)
@@ -335,6 +348,9 @@ namespace Ryujinx.Ui.Windows
             UpdatePreferredGpuComboBox();
 
             _graphicsBackend.Changed += (sender, e) => UpdatePreferredGpuComboBox();
+            _multiModeSelect.SetActiveId(ConfigurationState.Instance.Multiplayer.Mode.Value.ToString());
+            PopulateNetworkInterfaces();
+            _multiLanSelect.SetActiveId(ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value.ToString());
 
             _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
             _resScaleText.Buffer.Text            = ConfigurationState.Instance.Graphics.ResScaleCustom.Value.ToString();
@@ -342,6 +358,10 @@ namespace Ryujinx.Ui.Windows
             _graphicsShadersDumpPath.Buffer.Text = ConfigurationState.Instance.Graphics.ShadersDumpPath;
             _fsLogSpinAdjustment.Value           = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
             _systemTimeOffset                    = ConfigurationState.Instance.System.SystemTimeOffset;
+
+            _multiP2pDisable.Active              = ConfigurationState.Instance.Multiplayer.DisableP2p;
+            _multiLdnPassphraseEntry.Buffer.Text = ConfigurationState.Instance.Multiplayer.LdnPassphrase;
+            ValidateLdnPassphrase();
 
             _gameDirsBox.AppendColumn("", new CellRendererText(), "text", 0);
             _gameDirsBoxStore  = new ListStore(typeof(string));
@@ -466,6 +486,47 @@ namespace Ryujinx.Ui.Windows
             }
         }
 
+        private void ValidateLdnPassphrase()
+        {
+            string passphrase = _multiLdnPassphraseEntry.Buffer.Text;
+
+            Regex match = new Regex("Ryujinx-[0-9a-f]{8}");
+
+            bool valid = passphrase == "" || (passphrase.Length == 16 && match.IsMatch(passphrase));
+
+            _multiInvalidPassphraseLabel.Visible = !valid;
+        }
+
+        private void PopulateNetworkInterfaces()
+        {
+            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+            foreach (NetworkInterface nif in interfaces)
+            {
+                string guid = nif.Id;
+                string name = nif.Name;
+
+                _multiLanSelect.Append(guid, name);
+            }
+        }
+
+        private void ClearRandomPassphrase(object sender, EventArgs e)
+        {
+            _multiLdnPassphraseEntry.Buffer.Text = "";
+        }
+
+        private void ClickRandomPassphrase(object sender, EventArgs e)
+        {
+            Random random = new Random();
+            byte[] code   = new byte[4];
+
+            random.NextBytes(code);
+
+            uint codeUint = BitConverter.ToUInt32(code);
+
+            _multiLdnPassphraseEntry.Buffer.Text = $"Ryujinx-{codeUint:x8}";
+        }
+
         private void UpdateSystemTimeSpinners()
         {
             //Bind system time events
@@ -583,6 +644,11 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.System.AudioVolume.Value                  = (float)_audioVolumeSlider.Value / 100.0f;
 
             _previousVolumeLevel = ConfigurationState.Instance.System.AudioVolume.Value;
+
+            ConfigurationState.Instance.Multiplayer.Mode.Value                 = Enum.Parse<MultiplayerMode>(_multiModeSelect.ActiveId);
+            ConfigurationState.Instance.Multiplayer.DisableP2p.Value           = _multiP2pDisable.Active;
+            ConfigurationState.Instance.Multiplayer.LdnPassphrase.Value        = _multiLdnPassphraseEntry.Text;
+            ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value       = _multiLanSelect.ActiveId;
 
             if (_audioBackendSelect.GetActiveIter(out TreeIter activeIter))
             {

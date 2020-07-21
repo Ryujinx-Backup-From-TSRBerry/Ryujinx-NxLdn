@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Proxy;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -18,21 +19,21 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
         public bool Blocking { get => Socket.Blocking; set => Socket.Blocking = value; }
 
-        public IntPtr Handle => Socket.Handle;
+        public IntPtr Handle => IntPtr.Zero;
 
         public IPEndPoint RemoteEndPoint => Socket.RemoteEndPoint as IPEndPoint;
 
         public IPEndPoint LocalEndPoint => Socket.LocalEndPoint as IPEndPoint;
 
-        public Socket Socket { get; }
+        public ISocketImpl Socket { get; }
 
-        public ManagedSocket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType)
+        public ManagedSocket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, string lanInterfaceId)
         {
-            Socket = new Socket(addressFamily, socketType, protocolType);
+            Socket = SocketHelpers.CreateSocket(addressFamily, socketType, protocolType, lanInterfaceId);
             Refcount = 1;
         }
 
-        private ManagedSocket(Socket socket)
+        private ManagedSocket(ISocketImpl socket)
         {
             Socket = socket;
             Refcount = 1;
