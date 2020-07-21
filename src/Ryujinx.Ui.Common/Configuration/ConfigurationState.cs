@@ -3,6 +3,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui.Common.Configuration.System;
 using Ryujinx.Ui.Common.Configuration.Ui;
@@ -27,6 +28,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 public ReactiveObject<bool> AppColumn { get; private set; }
                 public ReactiveObject<bool> DevColumn { get; private set; }
                 public ReactiveObject<bool> VersionColumn { get; private set; }
+                public ReactiveObject<bool> LdnInfoColumn { get; private set; }
                 public ReactiveObject<bool> TimePlayedColumn { get; private set; }
                 public ReactiveObject<bool> LastPlayedColumn { get; private set; }
                 public ReactiveObject<bool> FileExtColumn { get; private set; }
@@ -40,6 +42,7 @@ namespace Ryujinx.Ui.Common.Configuration
                     AppColumn = new ReactiveObject<bool>();
                     DevColumn = new ReactiveObject<bool>();
                     VersionColumn = new ReactiveObject<bool>();
+                    LdnInfoColumn = new ReactiveObject<bool>();
                     TimePlayedColumn = new ReactiveObject<bool>();
                     LastPlayedColumn = new ReactiveObject<bool>();
                     FileExtColumn = new ReactiveObject<bool>();
@@ -561,9 +564,33 @@ namespace Ryujinx.Ui.Common.Configuration
             /// </summary>
             public ReactiveObject<string> LanInterfaceId { get; private set; }
 
+            /// <summary>
+            /// Multiplayer Mode
+            /// </summary>
+            public ReactiveObject<MultiplayerMode> Mode { get; private set; }
+
+            /// <summary>
+            /// Disable P2P Toggle
+            /// </summary>
+            public ReactiveObject<bool> DisableP2p { get; private set; }
+
+            /// <summary>
+            /// Default Username
+            /// </summary>
+            public ReactiveObject<string> Username { get; private set; }
+
+            /// <summary>
+            /// Local network passphrase, for private networks.
+            /// </summary>
+            public ReactiveObject<string> LdnPassphrase { get; private set; }
+
             public MultiplayerSection()
             {
                 LanInterfaceId = new ReactiveObject<string>();
+                Mode = new ReactiveObject<MultiplayerMode>();
+                DisableP2p = new ReactiveObject<bool>();
+                Username = new ReactiveObject<string>();
+                LdnPassphrase = new ReactiveObject<string>();
             }
         }
 
@@ -692,6 +719,7 @@ namespace Ryujinx.Ui.Common.Configuration
                     AppColumn = Ui.GuiColumns.AppColumn,
                     DevColumn = Ui.GuiColumns.DevColumn,
                     VersionColumn = Ui.GuiColumns.VersionColumn,
+                    LdnInfoColumn = Ui.GuiColumns.LdnInfoColumn,
                     TimePlayedColumn = Ui.GuiColumns.TimePlayedColumn,
                     LastPlayedColumn = Ui.GuiColumns.LastPlayedColumn,
                     FileExtColumn = Ui.GuiColumns.FileExtColumn,
@@ -741,6 +769,10 @@ namespace Ryujinx.Ui.Common.Configuration
                 GraphicsBackend = Graphics.GraphicsBackend,
                 PreferredGpu = Graphics.PreferredGpu,
                 MultiplayerLanInterfaceId = Multiplayer.LanInterfaceId,
+                MultiplayerMode = Multiplayer.Mode,
+                MultiplayerDisableP2p = Multiplayer.DisableP2p,
+                MultiplayerUsername = Multiplayer.Username,
+                MultiplayerLdnPassphrase = Multiplayer.LdnPassphrase,
             };
 
             return configurationFile;
@@ -795,6 +827,10 @@ namespace Ryujinx.Ui.Common.Configuration
             System.IgnoreMissingServices.Value = false;
             System.UseHypervisor.Value = true;
             Multiplayer.LanInterfaceId.Value = "0";
+            Multiplayer.Mode.Value = MultiplayerMode.RyuLdn;
+            Multiplayer.DisableP2p.Value = false;
+            Multiplayer.Username.Value = "Player";
+            Multiplayer.LdnPassphrase.Value = "";
             Ui.GuiColumns.FavColumn.Value = true;
             Ui.GuiColumns.IconColumn.Value = true;
             Ui.GuiColumns.AppColumn.Value = true;
@@ -1003,6 +1039,8 @@ namespace Ryujinx.Ui.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            // configurationFileFormat.Version == 13 -> LDN1
+
             if (configurationFileFormat.Version < 14)
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 14.");
@@ -1039,11 +1077,42 @@ namespace Ryujinx.Ui.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            // configurationFileFormat.Version == 19 -> LDN2
+
             if (configurationFileFormat.Version < 20)
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 20.");
 
                 configurationFileFormat.ShowConfirmExit = true;
+
+                configurationFileUpdated = true;
+            }
+
+            if (configurationFileFormat.Version < 21)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 21.");
+
+                // Initialize network config.
+
+                configurationFileFormat.MultiplayerMode = MultiplayerMode.RyuLdn;
+                configurationFileFormat.MultiplayerDisableP2p = false;
+                configurationFileFormat.MultiplayerUsername = "Player";
+                configurationFileFormat.MultiplayerLdnPassphrase = "";
+                configurationFileFormat.MultiplayerLanInterfaceId = "0";
+                configurationFileFormat.GuiColumns = new GuiColumns
+                {
+                    FavColumn = true,
+                    IconColumn = true,
+                    AppColumn = true,
+                    VersionColumn = true,
+                    LdnInfoColumn = true,
+                    DevColumn = true,
+                    TimePlayedColumn = true,
+                    LastPlayedColumn = true,
+                    FileExtColumn = true,
+                    FileSizeColumn = true,
+                    PathColumn = true,
+                };
 
                 configurationFileUpdated = true;
             }
@@ -1501,6 +1570,10 @@ namespace Ryujinx.Ui.Common.Configuration
             }
 
             Multiplayer.LanInterfaceId.Value = configurationFileFormat.MultiplayerLanInterfaceId;
+            Multiplayer.Mode.Value = configurationFileFormat.MultiplayerMode;
+            Multiplayer.DisableP2p.Value = configurationFileFormat.MultiplayerDisableP2p;
+            Multiplayer.Username.Value = configurationFileFormat.MultiplayerUsername;
+            Multiplayer.LdnPassphrase.Value = configurationFileFormat.MultiplayerLdnPassphrase;
 
             if (configurationFileUpdated)
             {

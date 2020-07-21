@@ -48,5 +48,8 @@
     <PackageVersion Include="System.IO.Hashing" Version="7.0.0" />
     <PackageVersion Include="System.Management" Version="7.0.2" />
     <PackageVersion Include="UnicornEngine.Unicorn" Version="2.0.2-rc1-fb78016" />
+    <PackageVersion Include="NetCoreServer" Version="3.0.12" />
+    <PackageVersion Include="Open.NAT.Core" Version="2.1.0.5" />
   </ItemGroup>
 </Project>
+
