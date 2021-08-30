@@ -216,12 +216,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
 
             if (copy2D)
             {
-                if (size == 4)
-                {
-                    // Skip single pixel copies for now.
-                    return;
-                }
-
                 // Buffer to texture copy.
                 int componentSize = (int)_state.State.SetRemapComponentsComponentSize + 1;
                 int srcComponents = (int)_state.State.SetRemapComponentsNumSrcComponents + 1;
