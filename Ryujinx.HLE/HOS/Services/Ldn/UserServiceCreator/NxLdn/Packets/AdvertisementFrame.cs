@@ -74,6 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 return netId;
             }
             set {
+                // TODO: Does this affect the passed in value?
                 value.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(value.IntentId.LocalCommunicationId);
                 LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
             }
@@ -242,8 +243,29 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         }
 
         public LdnNetworkInfo Info {
-            get => MemoryMarshal.Read<LdnNetworkInfo>(Payload);
-            set => MemoryMarshal.Write(Payload, ref value);
+            get {
+                LdnNetworkInfo ldnInfo = MemoryMarshal.Read<LdnNetworkInfo>(Payload);
+                ldnInfo.SecurityMode = BinaryPrimitives.ReverseEndianness(ldnInfo.SecurityMode);
+                for (int i = 0; i < ldnInfo.Nodes.Length; i++)
+                {
+                    ldnInfo.Nodes[i].Ipv4Address = BinaryPrimitives.ReverseEndianness(ldnInfo.Nodes[i].Ipv4Address);
+                    ldnInfo.Nodes[i].LocalCommunicationVersion = BinaryPrimitives.ReverseEndianness(ldnInfo.Nodes[i].LocalCommunicationVersion);
+                }
+                ldnInfo.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(ldnInfo.AdvertiseDataSize);
+                ldnInfo.AuthenticationId = BinaryPrimitives.ReverseEndianness(ldnInfo.AuthenticationId);
+                return ldnInfo;
+            }
+            set {
+                // TODO: Does this affect the passed in value?
+                value.SecurityMode = BinaryPrimitives.ReverseEndianness(value.SecurityMode);
+                for (int i = 0; i < value.Nodes.Length; i++) {
+                    value.Nodes[i].Ipv4Address = BinaryPrimitives.ReverseEndianness(value.Nodes[i].Ipv4Address);
+                    value.Nodes[i].LocalCommunicationVersion = BinaryPrimitives.ReverseEndianness(value.Nodes[i].LocalCommunicationVersion);
+                }
+                value.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(value.AdvertiseDataSize);
+                value.AuthenticationId = BinaryPrimitives.ReverseEndianness(value.AuthenticationId);
+                MemoryMarshal.Write(Payload, ref value);
+            }
         }
 
         private byte[] Encrypt(byte[] data) {
