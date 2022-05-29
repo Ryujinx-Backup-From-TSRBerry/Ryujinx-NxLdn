@@ -3022,6 +3022,7 @@
                                           <item id="Disabled" translatable="yes">Disabled</item>
                                           <item id="LdnRyu" translatable="yes">Ryujinx Ldn</item>
                                           <item id="LdnMitm" translatable="yes">ldn_mitm</item>
+                                          <item id="NxLdn" translatable="yes">Switch Ldn</item>
                                         </items>
                                       </object>
                                       <packing>

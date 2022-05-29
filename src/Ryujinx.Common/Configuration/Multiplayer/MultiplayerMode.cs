@@ -4,6 +4,7 @@
     {
         Disabled,
         LdnRyu,
-        LdnMitm
+        LdnMitm,
+        NxLdn
     }
 }

@@ -5,11 +5,12 @@ using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Common.SystemInterop;
+using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Common;
-using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
 using Ryujinx.Ui.Widgets;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -71,6 +72,10 @@ namespace Ryujinx
 
         static void Main(string[] args)
         {
+            if (!Capabilities.InheritCapabilities()) {
+                // System.Environment.Exit(1);
+            }
+
             Version = ReleaseInformation.Version;
 
             if (OperatingSystem.IsWindows() && !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17134))

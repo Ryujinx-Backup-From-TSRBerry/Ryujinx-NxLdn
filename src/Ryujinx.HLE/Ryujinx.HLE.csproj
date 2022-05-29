@@ -29,6 +29,7 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="NetCoreServer" />
     <PackageReference Include="Open.NAT.Core" />
+    <PackageReference Include="SharpPcap" />
   </ItemGroup>
 
   <!-- Due to Concentus. -->

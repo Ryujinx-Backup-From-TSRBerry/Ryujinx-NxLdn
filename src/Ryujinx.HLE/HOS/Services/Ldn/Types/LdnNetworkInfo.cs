@@ -1,10 +1,10 @@
-using Ryujinx.Common.Memory;
+﻿using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 0x430)]
-    struct LdnNetworkInfo
+    public struct LdnNetworkInfo
     {
         public Array16<byte> SecurityParameter;
         public ushort SecurityMode;
