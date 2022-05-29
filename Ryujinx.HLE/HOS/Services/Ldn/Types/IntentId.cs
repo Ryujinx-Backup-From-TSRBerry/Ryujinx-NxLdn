@@ -3,7 +3,7 @@
 namespace Ryujinx.HLE.HOS.Services.Ldn.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 0x10)]
-    struct IntentId
+    public struct IntentId
     {
         public long   LocalCommunicationId;
         public ushort Reserved1;

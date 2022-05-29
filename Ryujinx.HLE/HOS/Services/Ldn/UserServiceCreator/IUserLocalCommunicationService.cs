@@ -10,7 +10,7 @@ using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnMitm;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using Ryujinx.Memory;
 using Ryujinx.Horizon.Common;
@@ -1101,6 +1101,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                                 break;
                             case MultiplayerMode.LdnMitm:
                                 NetworkClient = new LdnMitmClient(context.Device.Configuration);
+                                break;
+                            case MultiplayerMode.NxLdn:
+                                NetworkClient = new NxLdnClient(this, context.Device.Configuration);
                                 break;
                             case MultiplayerMode.Disabled:
                                 NetworkClient = new LdnDisabledClient();
