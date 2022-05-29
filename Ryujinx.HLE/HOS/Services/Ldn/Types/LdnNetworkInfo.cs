@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.Types
 {
-    [StructLayout(LayoutKind.Sequential, Size = 1072)]
+    [StructLayout(LayoutKind.Sequential, Size = 1276)]
     public struct LdnNetworkInfo
     {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.Types
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 384)]
         public byte[] AdvertiseData;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 140)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 412)]
         public byte[] Unknown2;
 
         public ulong AuthenticationId;

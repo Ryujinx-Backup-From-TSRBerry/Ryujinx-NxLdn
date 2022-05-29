@@ -232,13 +232,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     NodeCountMax = request.NetworkConfig.NodeCountMax,
                     Nodes = new NodeInfo[8] {
                         new NodeInfo() {
-                            Reserved1 = request.NetworkConfig.Reserved1, // might be incorrect
+                            // Reserved1 = request.NetworkConfig.Reserved1, // might be incorrect
                             Ipv4Address = NetworkHelpers.ConvertIpv4Address(IPAddress.Parse($"169.254.{networkId}.1")),
                             IsConnected = 1,
                             LocalCommunicationVersion = request.NetworkConfig.LocalCommunicationVersion,
                             MacAddress = _adapter.MacAddress.GetAddressBytes(),
-                            NodeId = 1,
-                            Reserved2 = request.NetworkConfig.Reserved2, // might be incorrect
+                            // NodeId = 1,
+                            // Reserved2 = request.NetworkConfig.Reserved2, // might be incorrect
                             UserName = request.UserConfig.UserName
                         },
                         default, default, default, default, default, default, default
