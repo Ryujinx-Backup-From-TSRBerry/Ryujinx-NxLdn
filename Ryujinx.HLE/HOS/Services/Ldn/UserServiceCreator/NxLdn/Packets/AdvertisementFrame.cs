@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         // Vendor-specific, Nintendo OUI, LDN, Advertisement
         private static readonly byte[] LdnHeader = { 0x7F, 0x00, 0x22, 0xAA, 0x04, 0x00, 0x01, 0x01 };
 
-        private static readonly byte[] AdvertisementKeySource = {0x19, 0x18, 0x84, 0x74, 0x3e, 0x24, 0xc7, 0x7d, 0x87, 0xc6, 0x9e, 0x42, 0x07, 0xd0, 0xc4, 0x38 };
+        private static readonly byte[] AdvertisementKeySource = { 0x19, 0x18, 0x84, 0x74, 0x3e, 0x24, 0xc7, 0x7d, 0x87, 0xc6, 0x9e, 0x42, 0x07, 0xd0, 0xc4, 0x38 };
 
         // For PacketDotNet.Packet implementations this would usually be called Header
         private ByteArraySegment PacketHeader;
@@ -57,11 +57,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
         }
         public NetworkId Header {
-            get => StructConvHelper.BytesToStruct<NetworkId>(
-                    Endianness.BigEndian,
+            get => LdnHelper.FromBytes<NetworkId>(
                     PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray()
                 );
-            set => StructConvHelper.StructToBytes<NetworkId>(Endianness.BigEndian, value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
+            set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
         }
 
         public byte Version {
@@ -212,6 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                     throw new Exception();
                 }
             }
+            // Let's not worry about that for now
             // set
             // {
             //     if (value != null && value.Length == AdvertisementFields.MessageHeaderLength + (0x20 * 2)) {
@@ -234,7 +234,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             if (Encryption == 1)
                 return data;
 
-            byte[] key = EncryptionHelper.DeriveKey(StructConvHelper.StructToBytes<NetworkId>(Endianness.BigEndian, Header), AdvertisementKeySource);
+            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(Header), AdvertisementKeySource);
             // LogMsg($"Encrypt: Data length: {data.Length}");
             Span<byte> output = new Span<byte>(new byte[data.Length]);
             LibHac.Crypto.Aes.EncryptCtr128(data, output, key, Nonce);
@@ -246,7 +246,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 return data;
 
             // LogMsg($"Decrypt: Data length: {data.Length}");
-            byte[] key = EncryptionHelper.DeriveKey(StructConvHelper.StructToBytes<NetworkId>(Endianness.BigEndian, Header), AdvertisementKeySource);
+            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(Header), AdvertisementKeySource);
             // LogMsg($"Key: ", key);
             Span<byte> output = new Span<byte>(new byte[data.Length]);
             LibHac.Crypto.Aes.DecryptCtr128(data, output, key, Nonce);
