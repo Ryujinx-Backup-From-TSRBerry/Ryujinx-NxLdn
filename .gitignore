@@ -169,11 +169,44 @@ launchSettings.json
 PublishProfiles/
 
 # Ryujinx regular files
-Ryujinx*
+Ryujinx.sln
+Ryujinx.sln.DotSettings
 global.json
 LICENSE.md
 ARMeilleure/
 distribution/
+Ryujinx.Audio*
+Ryujinx.Audio.
+Ryujinx.Ava/*
+Ryujinx.Cpu/*
+Ryujinx.Graphics*
+Ryujinx.Common/*
+!Ryujinx.Common/Configuration
+Ryujinx.Common/Configuration/*
+!Ryujinx.Common/Configuration/Multiplayer
+Ryujinx.Common/Configuration/Multiplayer/*
+Ryujinx.Common/Utilities/*
+Ryujinx.HLE/*
+!Ryujinx.HLE/HOS
+Ryujinx.HLE/HOS/*
+!Ryujinx.HLE/HOS/Services
+Ryujinx.HLE/HOS/Services/*
+!Ryujinx.HLE/HOS/Services/Ldn
+Ryujinx.HLE/HOS/Services/Ldn/*
+Ryujinx.Headless.SDL2/*
+Ryujinx.Input.SDL2/*
+Ryujinx.Input/*
+Ryujinx.Memory*
+Ryujinx.SDL2.Common/*
+Ryujinx.Tests*
+Ryujinx.Ui.Common/*
+Ryujinx/*
+!Ryujinx/Ui
+Ryujinx/Ui/*
+!Ryujinx/Ui/Windows
+Ryujinx/Ui/Windows/*
+Ryujinx.ShaderTools/*
+
 
 # Include modified Ryujinx files
 !Ryujinx/Program.cs
@@ -181,5 +214,10 @@ distribution/
 !Ryujinx.Common/Utilities/JsonHelper.cs
 !Ryujinx/Ui/Windows/SettingsWindow.glade
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/IUserLocalCommunicationService.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/
+!Ryujinx.HLE/HOS/Services/Ldn/Types/CommonNetworkInfo.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/IntentId.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/LdnNetworkInfo.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/NetworkId.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/NodeInfo.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/Ssid.cs
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn
