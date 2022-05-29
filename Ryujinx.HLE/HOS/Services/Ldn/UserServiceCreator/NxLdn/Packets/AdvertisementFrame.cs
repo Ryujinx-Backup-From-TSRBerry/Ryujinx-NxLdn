@@ -4,8 +4,9 @@ using PacketDotNet.Utils.Converters;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp;
 using System;
+using System.Buffers.Binary;
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -55,11 +56,26 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 }
             }
         }
-        public NetworkId Header {
+
+        private NetworkId _header {
             get => LdnHelper.FromBytes<NetworkId>(
                     PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray()
                 );
             set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
+        }
+
+        public NetworkId Header {
+            get {
+                NetworkId netId = LdnHelper.FromBytes<NetworkId>(
+                    PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray()
+                );
+                netId.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(netId.IntentId.LocalCommunicationId);
+                return netId;
+            }
+            set {
+                value.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(value.IntentId.LocalCommunicationId);
+                LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
+            }
         }
 
         public byte Version {
@@ -233,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             if (Encryption == 1)
                 return data;
 
-            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(Header), AdvertisementKeySource);
+            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(_header), AdvertisementKeySource);
             // LogMsg($"Encrypt: Data length: {data.Length}");
             Span<byte> output = new Span<byte>(new byte[data.Length]);
             LibHac.Crypto.Aes.EncryptCtr128(data, output, key, Nonce);
@@ -245,7 +261,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 return data;
 
             // LogMsg($"Decrypt: Data length: {data.Length}");
-            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(Header), AdvertisementKeySource);
+            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(_header), AdvertisementKeySource);
             // LogMsg($"Key: ", key);
             Span<byte> output = new Span<byte>(new byte[data.Length]);
             LibHac.Crypto.Aes.DecryptCtr128(data, output, key, Nonce);
@@ -269,10 +285,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             // LogMsg($"MessageHeader[{MessageHeader.Length}]: ", MessageHeader);
             LogMsg($"HeaderData[{AdvertisementFields.SessionInfoLength}]: ", PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray());
             // LogMsg($"Header[{Marshal.SizeOf<SessionInfo>()}]: ", Header);
-            // LogMsg($"Version: ", Version);
-            // LogMsg($"Encryption: ", Encryption);
-            LogMsg($"BodySize: {BodySize}");
-            // LogMsg($"Nonce: [{Nonce.Length}]", Nonce);
+            LogMsg($"Version: ", Version);
+            LogMsg($"Encryption: ", Encryption);
+            // LogMsg($"BodySize: {BodySize}");
+            LogMsg($"Nonce: [{Nonce.Length}]", Nonce);
             // LogMsg($"Body data: ", PacketHeader.Skip(AdvertisementFields.BodyPosition).Take(AdvertisementFields.HashLength + BodySize).ToArray());
             // LogMsg($"Body[{Body.Length}]: ", Body);
             // LogMsg($"Hash[{Hash.Length}]: ", Hash);
