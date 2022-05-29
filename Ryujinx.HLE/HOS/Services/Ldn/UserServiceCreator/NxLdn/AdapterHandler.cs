@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             LogMsg($"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
 
-            LogMsg($"Built NetworkInfo: ", networkInfo);
+            // LogMsg($"Built NetworkInfo: ", networkInfo);
 
             if (networkInfo.Ldn.AdvertiseDataSize > 384)
                 // networkInfo.Ldn.AdvertiseDataSize = networkInfo.Ldn.AdvertiseData.First
@@ -124,10 +124,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             var packet = Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
 
+            if (_debugMode)
+                currentChannel = (ushort) ((ChannelRadioTapField)packet.Extract<RadioPacket>()[RadioTapType.Channel]).Channel;
+
             // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L710
             // RadioPacket HasPayloadPacket -> ActionFrame
             if (packet.HasPayloadPacket && packet.PayloadPacket is ActionFrame) {
-                LogMsg($"OnScanPacketArrival: Got Packet: {packet.ToString(StringOutputType.VerboseColored)}");
+                // LogMsg($"OnScanPacketArrival: Got Packet: {packet.ToString(StringOutputType.VerboseColored)}");
                 LogMsg($"OnScanPacketArrival: RadioPacket: Header length: {packet.HeaderData.Length} / Payload length: {packet.PayloadPacket.TotalPacketLength}");
                 // LogMsg($"OnScanPacketArrival: RadioPacket: {string.Join(" ", packet.PayloadPacket.HeaderData.Select(x => x.ToString("X2")))}");
                 // LogMsg($"OnScanPacketArrival: RadioPacket: {packet.PrintHex()}");
@@ -147,7 +150,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     LogMsg($"ActionPayloadData matches LDN header!");
                     // LogMsg("AdvertisementFrame: ", adFrame);
 
-                    // FIXME: LdnNetworkInfo struct is not correct - this seems to be a size issue
                     if (BuildNetworkInfo(currentChannel, action, adFrame, out NetworkInfo networkInfo)) {
                         if (!_scanResults.Contains(networkInfo))
                         {
