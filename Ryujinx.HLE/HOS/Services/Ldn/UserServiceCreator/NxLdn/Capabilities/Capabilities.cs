@@ -4,7 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
 {
+    // This is only needed for Linux
     public static class Capabilities {
+        // TODO: Remove debug stuff
         private static void LogMsg(string msg, object obj = null) {
             if (obj != null) {
                 string jsonString = JsonHelper.Serialize<object>(obj, true);
