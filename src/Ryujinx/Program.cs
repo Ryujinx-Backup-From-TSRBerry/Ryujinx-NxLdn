@@ -72,7 +72,7 @@ namespace Ryujinx
 
         static void Main(string[] args)
         {
-            if (!Capabilities.InheritCapabilities()) {
+            if (OperatingSystem.IsLinux() && !Capabilities.InheritCapabilities()) {
                 // System.Environment.Exit(1);
             }
 
