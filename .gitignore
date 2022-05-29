@@ -173,3 +173,19 @@ PublishProfiles/
 
 # Glade backup files
 *.glade~
+
+# Ryujinx regular files
+Ryujinx*
+global.json
+LICENSE.md
+ARMeilleure/
+distribution/
+
+# Include modified Ryujinx files
+!Ryujinx/Program.cs
+!Ryujinx.Common/Configuration/Multiplayer/MultiplayerMode.cs
+!Ryujinx.Common/Utilities/JsonHelper.cs
+!Ryujinx/Ui/Windows/SettingsWindow.glade
+!Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/IUserLocalCommunicationService.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/
+!Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn
