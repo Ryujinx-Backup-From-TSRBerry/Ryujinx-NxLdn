@@ -220,4 +220,5 @@ Ryujinx.ShaderTools/*
 !Ryujinx.HLE/HOS/Services/Ldn/Types/NetworkId.cs
 !Ryujinx.HLE/HOS/Services/Ldn/Types/NodeInfo.cs
 !Ryujinx.HLE/HOS/Services/Ldn/Types/Ssid.cs
+!Ryujinx.HLE/HOS/Services/Ldn/Types/NetworkInfo.cs
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn
