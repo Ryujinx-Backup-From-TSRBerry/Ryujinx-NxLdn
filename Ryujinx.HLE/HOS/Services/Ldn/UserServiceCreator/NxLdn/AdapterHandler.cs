@@ -213,7 +213,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         }
 
         public bool CreateNetwork(CreateAccessPointRequest request, byte[] advertiseData) {
-            PhysicalAddress broadcastAddr = new System.Net.NetworkInformation.PhysicalAddress(new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff });
+            PhysicalAddress broadcastAddr = new PhysicalAddress(new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff });
             byte[] sessionId = new byte[16];
             _random.NextBytes(sessionId);
             int networkId = _random.Next(1, 128);
