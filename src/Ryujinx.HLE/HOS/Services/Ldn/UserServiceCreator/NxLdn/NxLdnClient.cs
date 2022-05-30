@@ -124,7 +124,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient Scan");
 
-            // FIXME: Invalid memory access at virtual address 0x0000000000000000.
             return _adapterHandler.Scan(channel);
             // return new NetworkInfo[] {};
         }
