@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient Connect");
 
-            return NetworkError.None;
+            return _adapterHandler.Connect(request);
         }
 
         public NetworkError ConnectPrivate(ConnectPrivateRequest request)
@@ -127,7 +127,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             LogMsg("NxLdnClient Scan");
 
             return _adapterHandler.Scan(channel);
-            // return new NetworkInfo[] {};
         }
 
         public void SetAdvertiseData(byte[] data)
