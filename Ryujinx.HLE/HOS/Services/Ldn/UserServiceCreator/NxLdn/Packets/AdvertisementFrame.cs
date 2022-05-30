@@ -4,6 +4,7 @@ using PacketDotNet.Utils.Converters;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp;
 using System;
 using System.Buffers.Binary;
 
@@ -244,7 +245,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public LdnNetworkInfo Info {
             get {
-                LdnNetworkInfo ldnInfo = MemoryMarshal.Read<LdnNetworkInfo>(Payload);
+                NxLdnNetworkInfo ldnInfo = MemoryMarshal.Read<NxLdnNetworkInfo>(Payload);
                 ldnInfo.SecurityMode = BinaryPrimitives.ReverseEndianness(ldnInfo.SecurityMode);
                 for (int i = 0; i < ldnInfo.Nodes.Length; i++)
                 {
@@ -253,7 +254,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 }
                 ldnInfo.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(ldnInfo.AdvertiseDataSize);
                 ldnInfo.AuthenticationId = BinaryPrimitives.ReverseEndianness(ldnInfo.AuthenticationId);
-                return ldnInfo;
+                return ldnInfo.ToLdnNetworkInfo();
             }
             set {
                 // TODO: Does this affect the passed in value?
