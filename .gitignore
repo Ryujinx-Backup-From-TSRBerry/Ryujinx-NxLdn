@@ -193,6 +193,8 @@ Ryujinx.HLE/HOS/*
 Ryujinx.HLE/HOS/Services/*
 !Ryujinx.HLE/HOS/Services/Ldn
 Ryujinx.HLE/HOS/Services/Ldn/*
+!Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator
+Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/*
 Ryujinx.Headless.SDL2/*
 Ryujinx.Input.SDL2/*
 Ryujinx.Input/*
@@ -222,6 +224,8 @@ Ryujinx.ShaderTools/*
 !Ryujinx.HLE/HOS/Services/Ldn/Types/Ssid.cs
 !Ryujinx.HLE/HOS/Services/Ldn/Types/NetworkInfo.cs
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn
+Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn/temp/*
+!Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn/temp/*.cs
 
 # python venv
 .venv/

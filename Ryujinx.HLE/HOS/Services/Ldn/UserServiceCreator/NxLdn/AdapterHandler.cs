@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             LogMsg($"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
 
-            // LogMsg($"Built NetworkInfo: ", networkInfo);
+            LogMsg($"Built NetworkInfo: ", networkInfo);
 
             if (networkInfo.Ldn.AdvertiseDataSize > 384)
                 // networkInfo.Ldn.AdvertiseDataSize = networkInfo.Ldn.AdvertiseData.First
