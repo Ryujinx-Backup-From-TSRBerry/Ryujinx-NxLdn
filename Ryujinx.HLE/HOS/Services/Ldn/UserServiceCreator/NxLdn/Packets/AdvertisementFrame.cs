@@ -264,7 +264,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 }
                 value.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(value.AdvertiseDataSize);
                 value.AuthenticationId = BinaryPrimitives.ReverseEndianness(value.AuthenticationId);
-                Payload = LdnHelper.StructureToByteArray(value);
+                Payload = LdnHelper.StructureToByteArray(NxLdnNetworkInfo.FromLdnNetworkInfo(value));
             }
         }
 
