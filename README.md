@@ -14,6 +14,9 @@ Since I'm on Linux I will make everything work here first and then add Windows s
 
 - [Sharppcap](https://github.com/dotpcap/sharppcap)
 - Windows only: [Npcap](https://github.com/nmap/npcap)
+  - This library will be used to support raw packet capture as well as packet injection. Check these sources out to get more information about how this library will be used for this project:
+    - [Raw packet capture](https://npcap.com/guide/npcap-devguide.html#npcap-feature-dot11)
+    - [Npcap Features](https://npcap.com/guide/index.html#npcap-features)
 
 ## What kind of wifi adapter is needed?
 
