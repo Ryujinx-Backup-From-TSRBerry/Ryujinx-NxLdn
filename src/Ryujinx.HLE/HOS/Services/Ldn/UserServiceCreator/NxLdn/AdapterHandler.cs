@@ -100,11 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             LogMsg($"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
 
-            LogMsg($"Built NetworkInfo: ", networkInfo);
-
-            if (networkInfo.Ldn.AdvertiseDataSize > 384)
-                // networkInfo.Ldn.AdvertiseDataSize = networkInfo.Ldn.AdvertiseData.First
-                return false;
+            // LogMsg($"Built NetworkInfo: ", networkInfo);
 
             return (Marshal.SizeOf(networkInfo) == Marshal.SizeOf<NetworkInfo>());
         }
@@ -181,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             if (!_debugMode) {
                 // If this wasn't executed in main it will fail here
                 // But if it was then there is no need for that call (since the caps are already set correctly)
-                if (!Capabilities.InheritCapabilities())
+                if (OperatingSystem.IsLinux() && !Capabilities.InheritCapabilities())
                 {
                     // TODO: Return DisabledLdnClient
                     System.Environment.Exit(1);
@@ -229,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     IntentId = request.NetworkConfig.IntentId,
                     SessionId = sessionId
                 },
-                Encryption = 2, // can be 1 or 2
+                Encryption = 2, // can be 1(plain) or 2(AES-CTR) -> https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-payload
                 Info = new LdnNetworkInfo() {
                     AdvertiseData = advertiseData,
                     AdvertiseDataSize = (ushort) advertiseData.Length,
@@ -244,7 +240,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     Unknown2 = new Array140<byte>(),
                 },
                 Nonce = BitConverter.GetBytes(_random.NextInt64(0x100000000)),
-                Version = 3 // can be 2 or 3
+                Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
 
             adFrame.Info.Nodes[0] = new NodeInfo()
@@ -272,6 +268,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             if (_gameVersion.Length < 16) {
                 Array.Resize<byte>(ref _gameVersion, 16);
             }
+        }
+
+        public NetworkError Connect(ConnectRequest request) {
+            return NetworkError.None;
         }
 
         public NetworkInfo[] Scan(ushort channel) {
