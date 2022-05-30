@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
     internal readonly struct AdvertisementFields {
-        public static readonly int LdnHeaderLength = 0x8;
-        public static readonly int MessageHeaderPosition = LdnHeaderLength + 0x4;
+        public static readonly int LdnHeaderLength = Marshal.SizeOf<ActionFrameHeader>();
+        public static readonly int MessageHeaderPosition = LdnHeaderLength;
         public static readonly int MessageHeaderLength = 0x28;
         public static readonly int SessionInfoPosition = MessageHeaderPosition;
         public static readonly int SessionInfoLength = Marshal.SizeOf<NetworkId>();

@@ -4,7 +4,7 @@ using PacketDotNet.Utils.Converters;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using System;
 using System.Buffers.Binary;
 
@@ -17,9 +17,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
     // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L181
     // Length: 1388
     public sealed class AdvertisementFrame {
-        // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L704
-        // Vendor-specific, Nintendo OUI, LDN, Advertisement
-        private static readonly byte[] LdnHeader = { 0x7F, 0x00, 0x22, 0xAA, 0x04, 0x00, 0x01, 0x01 };
 
         private static readonly byte[] AdvertisementKeySource = { 0x19, 0x18, 0x84, 0x74, 0x3e, 0x24, 0xc7, 0x7d, 0x87, 0xc6, 0x9e, 0x42, 0x07, 0xd0, 0xc4, 0x38 };
 
@@ -68,9 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public NetworkId Header {
             get {
-                NetworkId netId = LdnHelper.FromBytes<NetworkId>(
-                    PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray()
-                );
+                NetworkId netId = _header;
                 netId.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(netId.IntentId.LocalCommunicationId);
                 return netId;
             }
@@ -82,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         }
 
         public byte Version {
-            get => PacketHeader.Skip((byte)AdvertisementFields.VersionPosition).First();
+            get => PacketHeader.Skip(AdvertisementFields.VersionPosition).First();
             set
             {
                 // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L253
@@ -307,7 +302,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
             // Log all Properties
             // LogMsg($"MessageHeader[{MessageHeader.Length}]: ", MessageHeader);
-            LogMsg($"HeaderData[{AdvertisementFields.SessionInfoLength}]: ", PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray());
+            // LogMsg($"HeaderData[{AdvertisementFields.SessionInfoLength}]: ", PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray());
             // LogMsg($"Header[{Marshal.SizeOf<SessionInfo>()}]: ", Header);
             LogMsg($"Version: ", Version);
             LogMsg($"Encryption: ", Encryption);
@@ -322,7 +317,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         }
 
         public static bool TryGetAdvertisementFrame(ActionFrame action, out AdvertisementFrame adFrame) {
-            if (action.PayloadDataSegment.Take(LdnHeader.Length).SequenceEqual(LdnHeader)) {
+            if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Action))) {
                 adFrame = new AdvertisementFrame(action.PayloadDataSegment);
                 return true;
             }
