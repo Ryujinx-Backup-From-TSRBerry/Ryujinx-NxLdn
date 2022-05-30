@@ -19,5 +19,31 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp {
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public byte[] Reserved1;
+
+        public Types.NodeInfo ToNodeInfo(byte nodeId) {
+            return new Types.NodeInfo()
+            {
+                Ipv4Address = this.Ipv4Address,
+                MacAddress = this.MacAddress,
+                NodeId = nodeId,
+                IsConnected = this.IsConnected,
+                UserName = this.UserName,
+                Reserved1 = 0,
+                LocalCommunicationVersion = this.LocalCommunicationVersion,
+                Reserved2 = new byte[16]
+            };
+        }
+
+        public static NxNodeInfo FromNodeInfo(Types.NodeInfo info) {
+            return new NxNodeInfo()
+            {
+                Ipv4Address = info.Ipv4Address,
+                MacAddress = info.MacAddress,
+                IsConnected = info.IsConnected,
+                UserName = info.UserName,
+                LocalCommunicationVersion = info.LocalCommunicationVersion,
+                Reserved1 = new byte[10]
+            };
+        }
     }
 }
