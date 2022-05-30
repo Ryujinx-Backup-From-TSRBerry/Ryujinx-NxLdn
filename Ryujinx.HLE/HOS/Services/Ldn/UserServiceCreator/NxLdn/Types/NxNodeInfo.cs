@@ -1,6 +1,7 @@
+using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp {
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types {
     [StructLayout(LayoutKind.Sequential, Size = 56)]
     public struct NxNodeInfo
     {
@@ -20,8 +21,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public byte[] Reserved1;
 
-        public Types.NodeInfo ToNodeInfo(byte nodeId) {
-            return new Types.NodeInfo()
+        public NodeInfo ToNodeInfo(byte nodeId) {
+            return new NodeInfo()
             {
                 Ipv4Address = this.Ipv4Address,
                 MacAddress = this.MacAddress,
@@ -34,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp {
             };
         }
 
-        public static NxNodeInfo FromNodeInfo(Types.NodeInfo info) {
+        public static NxNodeInfo FromNodeInfo(NodeInfo info) {
             return new NxNodeInfo()
             {
                 Ipv4Address = info.Ipv4Address,
