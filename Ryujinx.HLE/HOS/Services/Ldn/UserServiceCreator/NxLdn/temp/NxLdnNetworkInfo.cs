@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp {
                 Reserved1 = this.Reserved1,
                 NodeCountMax = this.NodeCountMax,
                 NodeCount = this.NodeCount,
-                Nodes = new Types.NodeInfo[8],
+                Nodes = new Types.NodeInfo[this.Nodes.Length],
                 Reserved2 = this.Reserved2,
                 AdvertiseDataSize = this.AdvertiseDataSize,
                 AdvertiseData = this.AdvertiseData,
@@ -51,22 +51,37 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.temp {
                 AuthenticationId = this.AuthenticationId
             };
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < this.Nodes.Length; i++)
             {
-                netInfo.Nodes.SetValue(new Types.NodeInfo()
-                {
-                    Ipv4Address = this.Nodes[i].Ipv4Address,
-                    MacAddress = this.Nodes[i].MacAddress,
-                    NodeId = (byte)(i + 1),
-                    IsConnected = this.Nodes[i].IsConnected,
-                    UserName = this.Nodes[i].UserName,
-                    Reserved1 = 0,
-                    LocalCommunicationVersion = this.Nodes[i].LocalCommunicationVersion,
-                    Reserved2 = new byte[16]
-                }, i);
+                netInfo.Nodes.SetValue(this.Nodes[i].ToNodeInfo((byte)(i + 1)), i);
             }
 
             return netInfo;
+        }
+
+        public static NxLdnNetworkInfo FromLdnNetworkInfo(Types.LdnNetworkInfo netInfo) {
+            NxLdnNetworkInfo nxNetInfo = new NxLdnNetworkInfo() {
+                SecurityParameter = netInfo.SecurityParameter,
+                SecurityMode = netInfo.SecurityMode,
+                StationAcceptPolicy = netInfo.StationAcceptPolicy,
+                Unknown1 = netInfo.Unknown1,
+                Reserved1 = netInfo.Reserved1,
+                NodeCountMax = netInfo.NodeCountMax,
+                NodeCount = netInfo.NodeCount,
+                Nodes = new NxNodeInfo[netInfo.Nodes.Length],
+                Reserved2 = netInfo.Reserved2,
+                AdvertiseDataSize = netInfo.AdvertiseDataSize,
+                AdvertiseData = netInfo.AdvertiseData,
+                Unknown2 = new byte[412],
+                AuthenticationId = netInfo.AuthenticationId
+            };
+
+            for (int i = 0; i < netInfo.Nodes.Length; i++)
+            {
+                nxNetInfo.Nodes.SetValue(NxNodeInfo.FromNodeInfo(netInfo.Nodes[i]), i);
+            }
+
+            return nxNetInfo;
         }
     }
 }
