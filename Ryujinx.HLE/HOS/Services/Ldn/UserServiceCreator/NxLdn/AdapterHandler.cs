@@ -6,6 +6,7 @@ using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using SharpPcap.LibPcap;
@@ -17,6 +18,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Threading;
+using AuthenticationFrame = Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets.AuthenticationFrame;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
@@ -271,6 +273,33 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         }
 
         public NetworkError Connect(ConnectRequest request) {
+            byte[] authKey = new byte[0x10];
+            _random.NextBytes(authKey);
+            AuthenticationRequest authRequest = new AuthenticationRequest() {
+                AppVersion = BitConverter.ToUInt16(_gameVersion)
+            };
+            request.UserConfig.UserName.AsSpan()[..32].CopyTo(authRequest.UserName.AsSpan());
+            ChallengeRequestParameter challenge = new ChallengeRequest() {
+                Token = request.NetworkInfo.Ldn.AuthenticationId,
+                Nonce = (ulong) _random.NextInt64(0x100000000), // FIXME: This should probably be done in another way
+                DeviceId = (ulong) _random.NextInt64(0x100000000) // FIXME: This should probably be done in another way
+            }.Encode();
+            DataDataFrame data = new DataDataFrame() {
+                SourceAddress = _adapter.MacAddress,
+                DestinationAddress = new PhysicalAddress(request.NetworkInfo.Common.MacAddress.AsSpan().ToArray()),
+                PayloadData = new AuthenticationFrame() {
+                    Version = 3, // FIXME: usually this will be 3 (with encryption), but there needs to be a way to check this
+                    StatusCode = AuthenticationStatusCode.Success,
+                    IsResponse = false,
+                    Header = request.NetworkInfo.NetworkId,
+                    NetworkKey = request.NetworkInfo.NetworkId.SessionId.AsSpan().ToArray(),
+                    AuthenticationKey = authKey, // FIXME: Secure RNG?
+                    Size = 64 + 0x300 + 0x24,
+                    Payload = authRequest,
+                    ChallengeRequest = challenge
+                }.Encode(),
+            };
+            // _adapter.Send(data);
             return NetworkError.None;
         }
 

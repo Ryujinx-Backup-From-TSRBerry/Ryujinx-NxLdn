@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
@@ -21,5 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
         public static readonly int AuthenticationKeyPosition = NetworkKeyPosition + NetworkKeyLength;
         public static readonly int AuthenticationKeyLength = 0x10;
         public static readonly int PayloadPosition = AuthenticationKeyPosition + AuthenticationKeyLength;
+        public static readonly int PayloadRequestChallengePosition = Marshal.SizeOf<AuthenticationRequest>() + 0x24;
+        public static readonly int PayloadRequestChallengeLength = 0x300;
     }
 }
