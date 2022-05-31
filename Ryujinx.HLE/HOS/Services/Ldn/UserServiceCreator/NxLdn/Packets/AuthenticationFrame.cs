@@ -4,7 +4,7 @@ using PacketDotNet.Utils.Converters;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
-using System.Buffers.Binary;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             set => PacketHeader.Bytes[PacketHeader.Offset + AuthenticationFields.StatusCodePosition] = (byte) value;
         }
 
-        private bool IsResponse {
+        public bool IsResponse {
             get => EndianBitConverter.Big.ToBoolean(PacketHeader.Bytes, AuthenticationFields.IsResponsePosition);
             set => EndianBitConverter.Big.CopyBytes(value, PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.IsResponsePosition);
         }
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.AuthenticationKeyLength);
         }
 
-        private byte Size {
+        public ushort Size {
             // TODO: Available bytes check: https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L504
             get => (byte) (SizeHigh << 8 | SizeLow);
             set
@@ -85,9 +85,61 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
         }
 
-        public byte[] Payload {
+        private byte[] _payload {
             get => PacketHeader.Skip(AuthenticationFields.PayloadPosition).Take(Size).ToArray();
             set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.PayloadPosition);
+        }
+
+        public AuthenticationPayload Payload {
+            get
+            {
+                if (!IsResponse)
+                {
+                    return LdnHelper.FromBytes<AuthenticationRequest>(_payload);
+                }
+                else
+                {
+                    if (Version >= 3)
+                        return LdnHelper.FromBytes<AuthenticationResponse>(_payload);
+                    return null;
+                }
+            }
+            set
+            {
+                if (!IsResponse)
+                {
+                    LdnHelper.StructureToByteArray((AuthenticationRequest) value).CopyTo(_payload, 0);
+                }
+                else
+                {
+                    // TODO: Adjust exception type + message
+                    if (Version < 3)
+                        throw new System.Exception("Version < 3");
+                    LdnHelper.StructureToByteArray((AuthenticationResponse)value).CopyTo(_payload, 0);
+                }
+            }
+        }
+
+        public ChallengeRequestParameter ChallengeRequest {
+            get
+            {
+                if (!IsResponse) {
+                    if (Version >= 3)
+                    {
+                        return LdnHelper.FromBytes<ChallengeRequestParameter>(_payload.Skip(AuthenticationFields.PayloadRequestChallengePosition).Take(AuthenticationFields.PayloadRequestChallengeLength).ToArray());
+                    }
+                    return default;
+                }
+                // TODO: Adjust exception type + message
+                throw new System.Exception("IsResponse == true");
+            }
+            set
+            {
+                // TODO: Adjust exception type + message
+                if (IsResponse)
+                    throw new System.Exception("IsResponse == true");
+                LdnHelper.StructureToByteArray(value).CopyTo(_payload, AuthenticationFields.PayloadRequestChallengePosition);
+            }
         }
 
         public byte[] Encode()
