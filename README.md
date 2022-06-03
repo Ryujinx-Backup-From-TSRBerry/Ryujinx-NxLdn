@@ -4,7 +4,7 @@ very early WIP
 
 I created this repo to share my progress in an easy way.
 
-Since I'm on Linux I will make everything work here first and then add Windows support.
+Since I'm on Linux I will make everything work here first and check if Windows requires more special handling.
 
 ## Credits
 
@@ -33,6 +33,7 @@ As long as monitor mode is available, packet injection should also work just fin
   # If this commands outputs a list that contains monitor then your wifi adapter is supported
   .\WlanHelper.exe <wifi interface> modes
   ```
+
 - Without installing any tools:
 
   ```ps1
