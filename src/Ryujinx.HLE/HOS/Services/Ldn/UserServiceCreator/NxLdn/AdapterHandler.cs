@@ -109,8 +109,28 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             throw new NotImplementedException();
         }
 
+        private void SetAdapterUp(bool up) {
+            string state = up ? "up" : "down";
+            using (Process process = new Process())
+            {
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.FileName = "ip";
+                process.StartInfo.Arguments = $"link set {_adapter.Name} {state}";
+                process.StartInfo.RedirectStandardError = true;
+                process.Start();
+                process.WaitForExit();
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"Failed to set adapter state: {process.StandardError.ReadToEnd()}");
+                }
+            }
+        }
+
         private void SetAdapterMode(AdapterMode mode) {
             string _mode = AdapterModeToString(mode);
+            if (!OperatingSystem.IsWindows()) {
+                SetAdapterUp(false);
+            }
             using (Process process = new Process())
             {
                 process.StartInfo.CreateNoWindow = true;
@@ -131,6 +151,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 {
                     throw new Exception($"Failed to set adapter mode: {process.StandardError.ReadToEnd()}");
                 }
+            }
+            if (!OperatingSystem.IsWindows())
+            {
+                SetAdapterUp(true);
             }
         }
 
