@@ -172,9 +172,10 @@ PublishProfiles/
 Ryujinx.sln
 Ryujinx.sln.DotSettings
 global.json
-LICENSE.md
+LICENSE.txt
 ARMeilleure/
 distribution/
+Ryujinx.Horizon.Generators/
 Ryujinx.Audio*
 Ryujinx.Audio.
 Ryujinx.Ava/*
