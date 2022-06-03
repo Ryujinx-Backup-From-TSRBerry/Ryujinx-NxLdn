@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 }
                 else {
                     process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
-                    process.StartInfo.Arguments = $"{_adapter.Name} mode";
+                    process.StartInfo.Arguments = $"\"{_adapter.Name}\" mode";
                 }
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.RedirectStandardOutput = true;
@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 else
                 {
                     process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
-                    process.StartInfo.Arguments = $"{_adapter.Name} mode {_mode}";
+                    process.StartInfo.Arguments = $"\"{_adapter.Name}\" mode {_mode}";
                 }
                 process.StartInfo.RedirectStandardError = true;
                 process.Start();
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 }
                 else if (OperatingSystem.IsWindows()) {
                     process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
-                    process.StartInfo.Arguments = $"{_adapter.Name} channel {channel}";
+                    process.StartInfo.Arguments = $"\"{_adapter.Name}\" channel {channel}";
                 }
                 else {
                     throw new NotImplementedException();
