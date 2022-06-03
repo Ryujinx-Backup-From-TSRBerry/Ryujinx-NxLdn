@@ -216,6 +216,7 @@ Ryujinx.ShaderTools/*
 !Ryujinx.Common/Configuration/Multiplayer/MultiplayerMode.cs
 !Ryujinx.Common/Utilities/JsonHelper.cs
 !Ryujinx/Ui/Windows/SettingsWindow.glade
+!Ryujinx.HLE/Ryujinx.HLE.csproj
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/IUserLocalCommunicationService.cs
 !Ryujinx.HLE/HOS/Services/Ldn/Types/CommonNetworkInfo.cs
 !Ryujinx.HLE/HOS/Services/Ldn/Types/IntentId.cs
