@@ -52,6 +52,88 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
+        private static AdapterMode StringToAdapterMode(string mode) {
+            switch (mode) {
+                case "managed":
+                    return AdapterMode.Managed;
+                case "monitor":
+                    return AdapterMode.Monitor;
+                default:
+                    throw new ArgumentException();
+            }
+        }
+
+        private static string AdapterModeToString(AdapterMode mode) {
+            switch (mode)
+            {
+                case AdapterMode.Managed:
+                    return "managed";
+                case AdapterMode.Monitor:
+                    return "monitor";
+                default:
+                    throw new ArgumentException();
+            }
+        }
+
+        private AdapterMode GetAdapterMode() {
+            using (Process process = new Process())
+            {
+                process.StartInfo.CreateNoWindow = true;
+                if (!OperatingSystem.IsWindows()) {
+                    process.StartInfo.FileName = "iw";
+                    process.StartInfo.Arguments = $"dev {_adapter.Name} info";
+                }
+                else {
+                    process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
+                    process.StartInfo.Arguments = $"{_adapter.Name} mode";
+                }
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.Start();
+                process.WaitForExit();
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"Failed to get adapter mode: {process.StandardError.ReadToEnd()}");
+                }
+                string[] stdout = process.StandardOutput.ReadToEnd().Split(Environment.NewLine);
+                string mode = "";
+                if (!OperatingSystem.IsWindows()) {
+                    mode = stdout.Where(l => l.TrimStart().StartsWith("type")).First().Trim().Split(" ")[1];
+                }
+                else {
+                    mode = stdout[0].Trim();
+                }
+                return StringToAdapterMode(mode);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private void SetAdapterMode(AdapterMode mode) {
+            string _mode = AdapterModeToString(mode);
+            using (Process process = new Process())
+            {
+                process.StartInfo.CreateNoWindow = true;
+                if (!OperatingSystem.IsWindows())
+                {
+                    process.StartInfo.FileName = "iw";
+                    process.StartInfo.Arguments = $"dev {_adapter.Name} set type {_mode}";
+                }
+                else
+                {
+                    process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
+                    process.StartInfo.Arguments = $"{_adapter.Name} mode {_mode}";
+                }
+                process.StartInfo.RedirectStandardError = true;
+                process.Start();
+                process.WaitForExit();
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"Failed to set adapter mode: {process.StandardError.ReadToEnd()}");
+                }
+            }
+        }
+
         private bool SetAdapterChannel(ushort channel) {
             if (_debugMode)
                 return true;
@@ -59,8 +141,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             using (Process process = new Process())
             {
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.FileName = "iw";
-                process.StartInfo.Arguments = $"{_adapter.Name} set channel {channel}";
+                if (OperatingSystem.IsLinux()) {
+                    process.StartInfo.FileName = "iw";
+                    process.StartInfo.Arguments = $"{_adapter.Name} set channel {channel}";
+                }
+                else if (OperatingSystem.IsWindows()) {
+                    process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
+                    process.StartInfo.Arguments = $"{_adapter.Name} channel {channel}";
+                }
+                else {
+                    throw new NotImplementedException();
+                }
                 process.StartInfo.RedirectStandardError = true;
                 // LogMsg($"AdapterHandler: Setting channel to {channel}...");
                 process.Start();
@@ -103,6 +194,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             LogMsg($"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
 
             // LogMsg($"Built NetworkInfo: ", networkInfo);
+
+            // https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)Swap_endianness('Raw',8,true)To_Hex('None',0)
+            LogMsg($"LocalCommunicationId: ", BitConverter.GetBytes(networkInfo.NetworkId.IntentId.LocalCommunicationId));
+            LogMsg($"SceneId: {networkInfo.NetworkId.IntentId.SceneId}");
+            LogMsg($"AppVersion: {networkInfo.Ldn.Nodes[0].LocalCommunicationVersion}");
 
             return (Marshal.SizeOf(networkInfo) == Marshal.SizeOf<NetworkInfo>());
         }
@@ -195,6 +291,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             // Crashing here means the device is not ready or "operation not permitted"
             // CAP_NET_RAW,CAP_NET_ADMIN are required
             if (!_debugMode) {
+                // TODO: Check if binaries exist before executing them
+                // Configure wifi adapter first
+                if (GetAdapterMode() != AdapterMode.Monitor)
+                    SetAdapterMode(AdapterMode.Monitor);
+                // Open it for packet capture and injection
                 _adapter.Open(mode: DeviceModes.Promiscuous);
             }
             else {
@@ -341,6 +442,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             {
                 LogMsg("AdapterHandler cleaning up...");
                 _adapter.Close();
+                if (GetAdapterMode() != AdapterMode.Managed)
+                    SetAdapterMode(AdapterMode.Managed);
             }
         }
     }
