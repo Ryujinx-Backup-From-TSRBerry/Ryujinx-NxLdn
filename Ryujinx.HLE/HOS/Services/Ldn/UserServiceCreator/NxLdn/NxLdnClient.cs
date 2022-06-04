@@ -43,23 +43,16 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _commService = parent;
             _config = config;
 
-            // UnicastIPAddressInformation _localIpInterface = NetworkHelpers.GetLocalInterface(_config.MultiplayerLanInterfaceId).Item2;
             LogMsg($"NxLdnClient MultiplayerLanInterfaceId: {_config.MultiplayerLanInterfaceId}");
 
-            if (_config.MultiplayerLanInterfaceId == "0") {
-                _adapterHandler = new AdapterHandler(new CaptureFileReaderDevice("debug-cap.pcap"), debug: true);
-            }
-            else {
-                // TODO: What happens when __config.MultiplayerLanInterfaceId == 0 (meaning Default)?
-                // For now I'll use it as a debug switch
-                // TODO: maybe filter for wifi devices? - eh, probably not (don't want to interfere with other cool projects)
-                foreach (ILiveDevice device in CaptureDeviceList.Instance)
+            // TODO: What happens when __config.MultiplayerLanInterfaceId == 0 (meaning Default)?
+            // TODO: maybe filter for wifi devices? - eh, probably not (don't want to interfere with other cool projects)
+            foreach (LibPcapLiveDevice device in LibPcapLiveDeviceList.Instance)
+            {
+                if (device.Name == _config.MultiplayerLanInterfaceId)
                 {
-                    if (device.Name == _config.MultiplayerLanInterfaceId)
-                    {
-                        _adapterHandler = new AdapterHandler(device, true);
-                        break;
-                    }
+                    _adapterHandler = new AdapterHandler(device, true);
+                    break;
                 }
             }
 
@@ -112,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient DisconnectNetwork");
 
-            // _adapterHandler.StopCapture();
+            _adapterHandler.DisconnectNetwork();
         }
 
         public ResultCode Reject(DisconnectReason disconnectReason, uint nodeId)
@@ -132,6 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public void SetAdvertiseData(byte[] data)
         {
             LogMsg("NxLdnClient SetAdvertiseData");
+            _adapterHandler.SetAdvertiseData(data);
         }
 
         public void SetGameVersion(byte[] versionString)
