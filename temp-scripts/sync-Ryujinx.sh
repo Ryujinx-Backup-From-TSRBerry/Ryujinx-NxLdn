@@ -15,6 +15,7 @@ dotnet build -c Release
 rsync -avP --delete \
     --exclude ".git" \
     --exclude ".github" \
+    --exclude ".vscode" \
     --exclude "README.md" \
     --exclude "LICENSE.txt" \
     --exclude "**/bin" \
