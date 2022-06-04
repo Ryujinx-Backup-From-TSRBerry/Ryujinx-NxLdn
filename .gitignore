@@ -237,3 +237,6 @@ Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn/temp/*
 
 # python venv
 .venv/
+
+# pcap files
+*.pcap
