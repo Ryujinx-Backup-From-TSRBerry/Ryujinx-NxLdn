@@ -5,14 +5,14 @@ nxldn_dir=$(realpath $script_dir/../)
 
 echo $nxldn_dir
 
-git stash
+git stash -u
 
 cd $1
 
 git pull
 dotnet build -c Release
 
-rsync -avP \
+rsync -avP --delete \
     --exclude ".git" \
     --exclude ".github" \
     --exclude "README.md" \
