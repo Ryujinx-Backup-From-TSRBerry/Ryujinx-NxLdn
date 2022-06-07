@@ -3,6 +3,11 @@
 script_dir=$(dirname $(realpath ${BASH_SOURCE[0]}))
 nxldn_dir=$(realpath $script_dir/../)
 
+if [ -z $1 ]; then
+    echo "Argument 1 empty: Ryujinx dir to sync"
+    exit 1
+fi
+
 echo $nxldn_dir
 
 git stash -u
