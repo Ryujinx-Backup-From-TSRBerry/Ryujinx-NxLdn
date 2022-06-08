@@ -10,6 +10,14 @@ Since I'm on Linux I will make everything work here first and check if Windows r
 
 - [kinnay](https://github.com/kinnay) basically did a lot of the groundwork for this project.
 
+## Linux: Run Ryujinx with the required capabilities
+
+This can be done by the updater automatically, but for now do this:
+
+1. Build Ryujinx-NxLdn: `dotnet build -c Release`
+2. Set the required capabilities: `sudo setcap cap_setpcap,cap_net_admin,cap_net_raw+eip ./Ryujinx/bin/Release/net6.0/Ryujinx`
+3. Run Ryujinx as a normal user: `./Ryujinx/bin/Release/net6.0/Ryujinx`
+
 ## New dependencies
 
 - [Sharppcap](https://github.com/dotpcap/sharppcap)
