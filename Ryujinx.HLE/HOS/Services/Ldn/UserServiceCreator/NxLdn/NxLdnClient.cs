@@ -25,13 +25,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
         }
 
-        // Linux: Get wifi adapter ready
-        // I created a small helper script for that in temp/
-        // nmcli device set <device name> managed false
-        // nmcli radio wifi off
-        // sudo rfkill unblock wifi
-        // sudo iw dev <device name> set monitor none
-        // sudo ip link set <device name> up
         public NxLdnClient(IUserLocalCommunicationService parent, HLEConfiguration config)
         {
             LogMsg("Init NxLdnClient...");
