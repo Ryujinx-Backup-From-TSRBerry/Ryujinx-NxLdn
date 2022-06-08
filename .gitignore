@@ -218,13 +218,6 @@ Ryujinx.ShaderTools/*
 !Ryujinx/Ui/Windows/SettingsWindow.glade
 !Ryujinx.HLE/Ryujinx.HLE.csproj
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/IUserLocalCommunicationService.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/CommonNetworkInfo.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/IntentId.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/LdnNetworkInfo.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/NetworkId.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/NodeInfo.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/Ssid.cs
-!Ryujinx.HLE/HOS/Services/Ldn/Types/NetworkInfo.cs
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn
 Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn/temp/*
 !Ryujinx.HLE/HOS/Services/Ldn/UserServiceCreator/NxLdn/temp/*.cs
