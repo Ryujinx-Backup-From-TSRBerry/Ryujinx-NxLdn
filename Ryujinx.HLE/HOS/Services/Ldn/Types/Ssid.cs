@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Ldn.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 34)]
-    public struct Ssid
+    internal struct Ssid
     {
         public byte Length;
 

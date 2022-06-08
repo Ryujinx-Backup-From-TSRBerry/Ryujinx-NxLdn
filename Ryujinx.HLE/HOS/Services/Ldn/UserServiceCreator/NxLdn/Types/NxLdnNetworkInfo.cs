@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types {
     [StructLayout(LayoutKind.Sequential, Size = 1276)]
-    public struct NxLdnNetworkInfo
+    internal struct NxLdnNetworkInfo
     {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
         public byte[] SecurityParameter;

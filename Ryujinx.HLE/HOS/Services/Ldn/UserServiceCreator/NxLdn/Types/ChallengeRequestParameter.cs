@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 0x300)]
-    public struct ChallengeRequestParameter
+    internal struct ChallengeRequestParameter
     {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         private byte[] _pad1;

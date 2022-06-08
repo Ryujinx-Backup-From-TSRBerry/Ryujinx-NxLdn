@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 {
     // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L453
     // Length: 78 + ? (depends on size)
-    public sealed class AuthenticationFrame {
+    internal sealed class AuthenticationFrame {
         // For PacketDotNet.Packet implementations this would usually be called Header
         private ByteArraySegment PacketHeader;
 
