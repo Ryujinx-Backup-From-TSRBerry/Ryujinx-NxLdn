@@ -23,21 +23,23 @@ using AuthenticationFrame = Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLd
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
     class AdapterHandler {
-        private LibPcapLiveDevice _adapter;
-        private bool _storeCapture = false;
-        private bool _debugMode = false;
-        private Random _random = new Random();
+        internal LibPcapLiveDevice _adapter;
+        internal bool _storeCapture = false;
+        internal bool _debugMode = false;
+        internal Random _random = new Random();
 
-        private CaptureFileWriterDevice _captureFileWriterDevice;
+        internal CaptureFileWriterDevice _captureFileWriterDevice;
 
         private ushort[] channels = {1, 6, 11};
         private ushort currentChannel = 0;
 
-        private NetworkInfo _networkInfo;
+        internal NetworkInfo _networkInfo;
         private byte[] _gameVersion;
 
         private List<NetworkInfo> _scanResults = new List<NetworkInfo>();
         private int _scanDwellTime = 110;
+
+        private Network.AccessPoint _ap;
 
         // TODO: Remove debug stuff
         private static void LogMsg(string msg, object obj = null)
@@ -124,11 +126,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         private void OnPacketArrival(object s, PacketCapture e) {
             var rawPacket = e.GetPacket();
-            if (_storeCapture)
-            {
-                _captureFileWriterDevice.Write(rawPacket);
-                // LogMsg($"OnScanPacketArrival: Raw packet dumped to file.");
-            }
             // LogMsg($"OnScanPacketArrival: [Len: {e.Data.Length}] {e.GetPacket()}");
 
             // LogMsg($"OnScanPacketArrival: {e.GetPacket().GetPacket().PrintHex()}");
@@ -147,6 +144,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L710
             // RadioPacket HasPayloadPacket -> ActionFrame
             if (packet.HasPayloadPacket && packet.PayloadPacket is ActionFrame) {
+                if (_storeCapture)
+                {
+                    _captureFileWriterDevice.Write(rawPacket);
+                    // LogMsg($"OnScanPacketArrival: Raw packet dumped to file.");
+                }
                 // LogMsg($"OnScanPacketArrival: Got Packet: {packet.ToString(StringOutputType.VerboseColored)}");
                 LogMsg($"OnScanPacketArrival: RadioPacket: Header length: {packet.HeaderData.Length} / Payload length: {packet.PayloadPacket.TotalPacketLength}");
                 // LogMsg($"OnScanPacketArrival: RadioPacket: {string.Join(" ", packet.PayloadPacket.HeaderData.Select(x => x.ToString("X2")))}");
@@ -213,6 +215,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 // Configure and open wifi adapter
                 _adapter.Open(new DeviceConfiguration() {
                     Monitor = MonitorMode.Active,
+                    // TODO: Test without monitor mode
                     // Mode = DeviceModes.Promiscuous,
                     LinkLayerType = LinkLayers.Ieee80211
                 });
@@ -232,57 +235,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 _captureFileWriterDevice = new CaptureFileWriterDevice("debug-cap.pcap");
                 _captureFileWriterDevice.Open(_adapter);
             }
-
-            _adapter.StartCapture();
         }
 
-        public bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData) {
-            PhysicalAddress broadcastAddr = new PhysicalAddress(new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff });
-            Array16<byte> sessionId = new();
-            _random.NextBytes(sessionId.AsSpan());
-            int networkId = _random.Next(1, 128);
-            ActionFrame action = new ActionFrame(_adapter.MacAddress, broadcastAddr, broadcastAddr);
-            AdvertisementFrame adFrame = new AdvertisementFrame() {
-                Header = new NetworkId() {
-                    IntentId = request.NetworkConfig.IntentId,
-                    SessionId = sessionId
-                },
-                Encryption = 2, // can be 1(plain) or 2(AES-CTR) -> https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-payload
-                Info = new LdnNetworkInfo() {
-                    AdvertiseData = advertiseData,
-                    AdvertiseDataSize = (ushort) advertiseData.Length,
-                    AuthenticationId = 0, // ?
-                    NodeCount = 1,
-                    NodeCountMax = request.NetworkConfig.NodeCountMax,
-                    Reserved1 = 0,
-                    Reserved2 = 0,
-                    SecurityMode = ((ushort)request.SecurityConfig.SecurityMode),
-                    StationAcceptPolicy = 0,
-                    Unknown1 = 0,
-                    Unknown2 = new Array140<byte>(),
-                },
-                Nonce = BitConverter.GetBytes(_random.NextInt64(0x100000000)),
-                Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
-            };
-
-            adFrame.Info.Nodes[0] = new NodeInfo()
-            {
-                Reserved1 = request.NetworkConfig.Reserved1, // might be incorrect
-                Ipv4Address = NetworkHelpers.ConvertIpv4Address(IPAddress.Parse($"169.254.{networkId}.1")),
-                IsConnected = 1,
-                LocalCommunicationVersion = request.NetworkConfig.LocalCommunicationVersion,
-                NodeId = 1,
-                UserName = request.UserConfig.UserName
-            };
-
-            request.NetworkConfig.Reserved2.AsSpan().CopyTo(adFrame.Info.Nodes[0].Reserved2.AsSpan()); // might be incorrect
-
-            _adapter.MacAddress.GetAddressBytes().CopyTo(adFrame.Info.Nodes[0].MacAddress.AsSpan());
-
-            request.SecurityConfig.Passphrase.AsSpan()[..16].CopyTo(adFrame.Info.SecurityParameter.AsSpan());
-
-            action.PayloadData = adFrame.Encode();
-            return false;
+        public bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, out NetworkInfo networkInfo) {
+            _ap = new Network.AccessPoint(this);
+            _ap.BuildNewNetworkInfo(request, advertiseData);
+            networkInfo = _networkInfo;
+            return _ap.Start();
         }
 
         public void SetGameVersion(byte[] versionString) {
@@ -305,6 +264,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 Nonce = (ulong) _random.NextInt64(0x100000000), // FIXME: This should probably be done in another way
                 DeviceId = (ulong) _random.NextInt64(0x100000000) // FIXME: This should probably be done in another way
             }.Encode();
+            // TODO: Figure out if this is the right packet type
             DataDataFrame data = new DataDataFrame() {
                 SourceAddress = _adapter.MacAddress,
                 DestinationAddress = new PhysicalAddress(request.NetworkInfo.Common.MacAddress.AsSpan().ToArray()),
@@ -360,20 +320,24 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         }
 
         public void SetAdvertiseData(byte[] data) {
-            _networkInfo.Ldn.AdvertiseData = data;
+            data.CopyTo(_networkInfo.Ldn.AdvertiseData.AsSpan());
             _networkInfo.Ldn.AdvertiseDataSize = (ushort) data.Length;
         }
 
         public void DisconnectAndStop() {
-            if (!_debugMode)
-            {
-                LogMsg("AdapterHandler cleaning up...");
+            LogMsg("AdapterHandler cleaning up...");
+            if (_adapter.Opened)
                 _adapter.Close();
-            }
         }
 
         public void DisconnectNetwork() {
             _adapter.StopCapture();
+        }
+
+        ~AdapterHandler() {
+            if (_adapter.Opened)
+                _adapter.Close();
+            _adapter.Dispose();
         }
     }
 }

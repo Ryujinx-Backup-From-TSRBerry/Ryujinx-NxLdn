@@ -15,8 +15,8 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 {
     // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L181
-    // Length: 1388
-    public sealed class AdvertisementFrame {
+    // Length: 1364 | in Ryujinx: 1368
+    internal sealed class AdvertisementFrame {
 
         private static readonly byte[] AdvertisementKeySource = { 0x19, 0x18, 0x84, 0x74, 0x3e, 0x24, 0xc7, 0x7d, 0x87, 0xc6, 0x9e, 0x42, 0x07, 0xd0, 0xc4, 0x38 };
 
@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             set {
                 // TODO: Does this affect the passed in value?
                 value.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(value.IntentId.LocalCommunicationId);
-                LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
+                _header = value;
             }
         }
 
@@ -183,7 +183,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         // Info
         private byte[] Payload {
-            get => Body.Skip(0x20).ToArray();
+            get => Body.Skip(AdvertisementFields.HashLength).ToArray();
             set
             {
                 if (value != null && value.Length > 0 && value.Length <= BodySize)
@@ -211,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 message.AddRange(MessageHeader);
                 message.AddRange(new byte[0x20]);
                 message.AddRange(Payload);
-                Span<byte> output = new Span<byte>(new byte[0x20]);
+                Span<byte> output = new Span<byte>(new byte[AdvertisementFields.HashLength]);
                 LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), output);
                 // LogMsg("Message: ", message.ToArray());
                 // LogMsg("Message Hash: ", output.ToArray());
@@ -224,18 +224,23 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                     throw new Exception();
                 }
             }
-            // Let's not worry about that for now
-            // set
-            // {
-            //     if (value != null && value.Length == AdvertisementFields.MessageHeaderLength + (0x20 * 2)) {
-            //         MessageHeader = value.Take(AdvertisementFields.MessageHeaderLength).ToArray();
-            //         Payload = value.Skip(AdvertisementFields.MessageHeaderLength + 0x20).ToArray();
-            //         if ()
-            //     }
-            //     else {
-            //         throw new ArgumentException();
-            //     }
-            // }
+            set
+            {
+                if (value != null && value.Length == AdvertisementFields.MessageHeaderLength + 0x20 + BodySize) {
+                    MessageHeader = value.Take(AdvertisementFields.MessageHeaderLength).ToArray();
+                    Payload = value.Skip(AdvertisementFields.MessageHeaderLength + 0x20).ToArray();
+                    List<byte> message = new List<byte>();
+                    message.AddRange(MessageHeader);
+                    message.AddRange(new byte[0x20]);
+                    message.AddRange(Payload);
+                    Span<byte> hash = new Span<byte>(new byte[AdvertisementFields.HashLength]);
+                    LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), hash);
+                    Hash = hash.ToArray();
+                }
+                else {
+                    throw new ArgumentException();
+                }
+            }
         }
 
         public LdnNetworkInfo Info {
@@ -260,7 +265,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 }
                 value.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(value.AdvertiseDataSize);
                 value.AuthenticationId = BinaryPrimitives.ReverseEndianness(value.AuthenticationId);
-                MemoryMarshal.Write(Payload, ref value);
+                BodySize = (ushort) Marshal.SizeOf<NxLdnNetworkInfo>();
+                NxLdnNetworkInfo info = NxLdnNetworkInfo.FromLdnNetworkInfo(value);
+                MemoryMarshal.Write(Payload, ref info);
             }
         }
 
@@ -291,22 +298,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             return PacketHeader.ActualBytes();
         }
 
-        public AdvertisementFrame() {
-            PacketHeader = new ByteArraySegment(new byte[1388]);
-        }
-
-        private AdvertisementFrame(ByteArraySegment byteArraySegment) {
-            PacketHeader = byteArraySegment;
-
-            // LogMsg($"Data[{byteArraySegment.Length}]: ", byteArraySegment.ActualBytes());
-
-            // Log all Properties
-            // LogMsg($"MessageHeader[{MessageHeader.Length}]: ", MessageHeader);
+        public void LogProps() {
+            LogMsg($"MessageHeader[{MessageHeader.Length}]: ", MessageHeader);
             // LogMsg($"HeaderData[{AdvertisementFields.SessionInfoLength}]: ", PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray());
             // LogMsg($"Header[{Marshal.SizeOf<SessionInfo>()}]: ", Header);
             LogMsg($"Version: ", Version);
             LogMsg($"Encryption: ", Encryption);
-            // LogMsg($"BodySize: {BodySize}");
+            LogMsg($"BodySize: {BodySize}");
             LogMsg($"Nonce: [{Nonce.Length}]", Nonce);
             // LogMsg($"Body data: ", PacketHeader.Skip(AdvertisementFields.BodyPosition).Take(AdvertisementFields.HashLength + BodySize).ToArray());
             // LogMsg($"Body[{Body.Length}]: ", Body);
@@ -314,6 +312,19 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             // LogMsg($"Payload[{Payload.Length}]: ", Payload);
             // LogMsg($"Message[{Message.Length}]: ", Message);
             // LogMsg($"Info[{Marshal.SizeOf<LdnNetworkInfo>()}]: ", Info);
+        }
+
+        public AdvertisementFrame() {
+            PacketHeader = new ByteArraySegment(new byte[1368]);
+            ActionFrameHeader actionHeader = HeaderFields.Action;
+            MemoryMarshal.Write(PacketHeader.Bytes.AsSpan(PacketHeader.Offset), ref actionHeader);
+        }
+
+        private AdvertisementFrame(ByteArraySegment byteArraySegment) {
+            PacketHeader = byteArraySegment;
+
+            // LogMsg($"Data[{byteArraySegment.Length}]: ", byteArraySegment.ActualBytes());
+            LogProps();
         }
 
         public static bool TryGetAdvertisementFrame(ActionFrame action, out AdvertisementFrame adFrame) {
