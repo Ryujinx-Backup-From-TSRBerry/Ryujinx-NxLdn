@@ -16,7 +16,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
 
         public PacketType PacketType;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-        private byte[] _pad2;
+        private ulong _pad2;
     }
 }

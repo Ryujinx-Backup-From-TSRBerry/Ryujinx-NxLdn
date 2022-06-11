@@ -2,7 +2,7 @@ using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types {
-    [StructLayout(LayoutKind.Sequential, Size = 1276)]
+    [StructLayout(LayoutKind.Sequential, Size = 1280)]
     internal struct NxLdnNetworkInfo
     {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]

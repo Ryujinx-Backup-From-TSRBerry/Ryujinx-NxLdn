@@ -2,7 +2,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn.Types;
-using SharpPcap;
 using SharpPcap.LibPcap;
 using System;
 
@@ -75,7 +74,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient CreateNetwork");
 
-            return true;
+            if (_adapterHandler.CreateNetwork(request, advertiseData, out NetworkInfo networkInfo))
+            {
+                NetworkChange.Invoke(this, new NetworkChangeEventArgs(networkInfo, true));
+                return true;
+            }
+
+            return false;
         }
 
         public bool CreateNetworkPrivate(CreateAccessPointPrivateRequest request, byte[] advertiseData)
@@ -135,11 +140,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public void Dispose()
         {
             LogMsg("NxLdnClient Dispose");
-        }
-
-        public void HandleCreateNetwork(NetworkInfo info)
-        {
-            LogMsg("NxLdnClient HandleCreateNetwork");
         }
 
         public void HandleUpdateNodes(NetworkInfo info)
