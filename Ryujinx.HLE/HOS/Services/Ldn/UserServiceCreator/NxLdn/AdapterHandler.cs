@@ -196,8 +196,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 // But if it was then there is no need for that call (since the caps are already set correctly)
                 if (OperatingSystem.IsLinux() && !Capabilities.InheritCapabilities())
                 {
-                    // TODO: Return DisabledLdnClient
-                    System.Environment.Exit(1);
+                    throw new SystemException("Raising capabilities failed");
                 }
             }
             else {
