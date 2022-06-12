@@ -812,7 +812,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                             NetworkClient = new Spacemeowx2LdnClient(this, context.Device.Configuration);
                             break;
                         case MultiplayerMode.NxLdn:
-                            try {
+                            try
+                            {
                                 NetworkClient = new NxLdnClient(this, context.Device.Configuration);
                             }
                             catch (Exception)

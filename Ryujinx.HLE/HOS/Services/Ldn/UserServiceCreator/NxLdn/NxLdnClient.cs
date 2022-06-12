@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         private HLEConfiguration _config;
         public ProxyConfig Config { get; }
 
-        private AdapterHandler _adapterHandler;
+        private BaseAdapterHandler _adapterHandler;
 
         public event EventHandler<NetworkChangeEventArgs> NetworkChange;
 
@@ -38,13 +38,20 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             LogMsg($"NxLdnClient MultiplayerLanInterfaceId: {_config.MultiplayerLanInterfaceId}");
 
             // TODO: What happens when __config.MultiplayerLanInterfaceId == 0 (meaning Default)?
-            // TODO: maybe filter for wifi devices? - eh, probably not (don't want to interfere with other cool projects)
-            foreach (LibPcapLiveDevice device in LibPcapLiveDeviceList.Instance)
+            if (_config.MultiplayerLanInterfaceId == "0")
             {
-                if (device.Name == _config.MultiplayerLanInterfaceId)
+                _adapterHandler = new DebugAdapterHandler(new CaptureFileReaderDevice("debug-readCap.pcap"));
+            }
+            else
+            {
+                // TODO: maybe filter for wifi devices? - eh, probably not (don't want to interfere with other cool projects)
+                foreach (LibPcapLiveDevice device in LibPcapLiveDeviceList.Instance)
                 {
-                    _adapterHandler = new AdapterHandler(device, true);
-                    break;
+                    if (device.Name == _config.MultiplayerLanInterfaceId)
+                    {
+                        _adapterHandler = new AdapterHandler(device, true);
+                        break;
+                    }
                 }
             }
 
@@ -60,7 +67,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient Connect");
 
-            return _adapterHandler.Connect(request);
+            // return _adapterHandler.Connect(request);
+            return NetworkError.None;
         }
 
         public NetworkError ConnectPrivate(ConnectPrivateRequest request)
@@ -94,7 +102,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient DisconnectAndStop");
 
-            if (_adapterHandler != null) {
+            if (_adapterHandler != null)
+            {
                 _adapterHandler.DisconnectAndStop();
             }
         }
