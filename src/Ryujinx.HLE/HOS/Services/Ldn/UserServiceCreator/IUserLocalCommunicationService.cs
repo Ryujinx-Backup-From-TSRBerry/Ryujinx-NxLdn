@@ -1111,9 +1111,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                                 catch (Exception)
                                 {
                                     Logger.Error?.Print(LogClass.ServiceLdn, "Could not create AdapterHandler. Defaulting to stubbed wireless.", "NxLdnClient");
-                                    NetworkClient = new DisabledLdnClient();
+                                    NetworkClient = new LdnDisabledClient();
                                 }
-                                break;
                                 break;
                             case MultiplayerMode.Disabled:
                                 NetworkClient = new LdnDisabledClient();
