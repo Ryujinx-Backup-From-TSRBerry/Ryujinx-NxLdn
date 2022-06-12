@@ -21,7 +21,7 @@ using AuthenticationFrame = Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLd
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
-    class AdapterHandler {
+    class AdapterHandler: IDisposable {
         internal LibPcapLiveDevice _adapter;
         internal bool _storeCapture = false;
         internal bool _debugMode = false;
@@ -183,6 +183,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         * Handles everything related to the WiFi adapter
         */
         public AdapterHandler(LibPcapLiveDevice device, bool storeCapture = false, bool debug = false) {
+            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => Dispose();
+            AppDomain.CurrentDomain.ProcessExit += (object sender, EventArgs e) => Dispose();
             // ILiveDevice doesn't work with pcap files
             debug = false;
             _adapter = device;
@@ -330,9 +332,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _adapter.StopCapture();
         }
 
-        ~AdapterHandler() {
-            if (_adapter.Opened)
-                _adapter.Close();
+        public void Dispose() {
+            DisconnectAndStop();
             _adapter.Dispose();
         }
     }
