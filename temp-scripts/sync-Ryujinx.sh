@@ -31,3 +31,5 @@ cd -
 
 git restore .
 git stash apply
+
+dotnet build -c Release
