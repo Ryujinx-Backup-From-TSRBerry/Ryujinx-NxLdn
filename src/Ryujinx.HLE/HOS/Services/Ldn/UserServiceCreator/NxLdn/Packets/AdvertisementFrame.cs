@@ -240,50 +240,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
         }
 
-        private byte[] Message
-        {
-            get
-            {
-                List<byte> message = new List<byte>();
-                message.AddRange(MessageHeader);
-                message.AddRange(new byte[0x20]);
-                message.AddRange(Payload);
-                Span<byte> output = new Span<byte>(new byte[AdvertisementFields.HashLength]);
-                LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), output);
-                // LogMsg("Message: ", message.ToArray());
-                // LogMsg("Message Hash: ", output.ToArray());
-                if (LibHac.Common.Utilities.ArraysEqual(output.ToArray(), Hash))
-                {
-                    return message.ToArray();
-                }
-                else
-                {
-                    LogMsg("Generated message hash: ", output.ToArray());
-                    LogMsg("Expected message hash: ", Hash);
-                    throw new Exception();
-                }
-            }
-            set
-            {
-                if (value != null && value.Length == AdvertisementFields.MessageHeaderLength + 0x20 + BodySize)
-                {
-                    MessageHeader = value.Take(AdvertisementFields.MessageHeaderLength).ToArray();
-                    Payload = value.Skip(AdvertisementFields.MessageHeaderLength + 0x20).ToArray();
-                    List<byte> message = new List<byte>();
-                    message.AddRange(MessageHeader);
-                    message.AddRange(new byte[0x20]);
-                    message.AddRange(Payload);
-                    Span<byte> hash = new Span<byte>(new byte[AdvertisementFields.HashLength]);
-                    LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), hash);
-                    Hash = hash.ToArray();
-                }
-                else
-                {
-                    throw new ArgumentException();
-                }
-            }
-        }
-
         public LdnNetworkInfo Info
         {
             get
@@ -346,6 +302,30 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             return PacketHeader.ActualBytes();
         }
 
+        public void WriteHash()
+        {
+            Hash = CalcHash().ToArray();
+        }
+
+        private Span<byte> CalcHash()
+        {
+            List<byte> message = new List<byte>();
+            message.AddRange(MessageHeader);
+            message.AddRange(new byte[0x20]);
+            message.AddRange(Payload);
+            LogMsg("Message: ", message.ToArray());
+            Span<byte> output = new Span<byte>(new byte[AdvertisementFields.HashLength]);
+            LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), output);
+            return output;
+        }
+
+        public bool CheckHash()
+        {
+            Span<byte> actualHash = CalcHash();
+            LogMsg("Message Hash: ", actualHash.ToArray());
+            return LibHac.Common.Utilities.ArraysEqual(actualHash.ToArray(), Hash);
+        }
+
         public void LogProps()
         {
             LogMsg($"MessageHeader[{MessageHeader.Length}]: ", MessageHeader);
@@ -383,7 +363,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Action)))
             {
                 adFrame = new AdvertisementFrame(action.PayloadDataSegment);
-                return true;
+                return adFrame.CheckHash();
             }
             else
             {
