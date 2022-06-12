@@ -1,25 +1,28 @@
 using PacketDotNet.Ieee80211;
 using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
 using SharpPcap;
 using System;
+using System.Net.NetworkInformation;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 {
-    internal class AccessPoint : BaseAccessPoint
+    internal class DebugAccessPoint : BaseAccessPoint
     {
-        private AdapterHandler _parent;
+        private DebugAdapterHandler _parent;
+        private PhysicalAddress _macAddress;
 
         public override void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData)
         {
             base.BuildNewNetworkInfo(request, advertiseData);
-            Array33<byte> sessionId = new();
-            _parent._random.NextBytes(sessionId.AsSpan()[..16]);
+            byte[] sessionId = new byte[16];
+            _parent._random.NextBytes(sessionId);
+            Array.Resize(ref sessionId, 33);
             int networkId = _parent._random.Next(1, 128);
-            _parent._adapter.MacAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
-            _parent._adapter.MacAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
+            _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
+            _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
             LogMsg("AP: New NetworkInfo created.");
         }
 
@@ -28,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             byte[] nonce = BitConverter.GetBytes(_parent._random.Next(0x10000000));
             RadioPacket radioPacket = base.GetAdvertisementFrame();
 
-            ActionFrame action = new ActionFrame(_parent._adapter.MacAddress, broadcastAddr, broadcastAddr);
+            ActionFrame action = new ActionFrame(_macAddress, broadcastAddr, broadcastAddr);
             AdvertisementFrame advertisement = new AdvertisementFrame()
             {
                 Header = _parent._networkInfo.NetworkId,
@@ -50,7 +53,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             while (_parent._adapter.Opened)
             {
                 RadioPacket radioPacket = GetAdvertisementFrame();
-                _parent._adapter.SendPacket(radioPacket);
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
                     // LogMsg($"AP: Writing packet to file...");
@@ -61,13 +63,16 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             }
         }
 
-        public AccessPoint(AdapterHandler handler) : base(handler)
+        public DebugAccessPoint(DebugAdapterHandler handler) : base(handler)
         {
             _parent = handler;
             _parent._adapter.OnPacketArrival += _eventHandler;
+            byte[] randomMac = new byte[6];
+            _parent._random.NextBytes(randomMac);
+            _macAddress = new PhysicalAddress(randomMac);
         }
 
-        ~AccessPoint()
+        ~DebugAccessPoint()
         {
             _parent._adapter.OnPacketArrival -= _eventHandler;
         }
