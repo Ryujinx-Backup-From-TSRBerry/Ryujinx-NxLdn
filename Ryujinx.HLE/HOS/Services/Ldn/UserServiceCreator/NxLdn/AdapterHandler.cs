@@ -208,6 +208,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             // Crashing here means the device is not ready or "operation not permitted"
             // Linux: CAP_NET_RAW,CAP_NET_ADMIN are required
+            // Windows: Npcap needs to be configured without admin-only access or Ryujinx needs to be started as Admin
             if (!_debugMode) {
                 // Configure and open wifi adapter
                 _adapter.Open(new DeviceConfiguration() {
