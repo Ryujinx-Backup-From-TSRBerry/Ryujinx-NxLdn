@@ -1,10 +1,12 @@
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
+{
 
     [StructLayout(LayoutKind.Sequential, Size = 12)]
-    internal struct ActionFrameHeader {
+    internal struct ActionFrameHeader
+    {
         public byte Category;
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]

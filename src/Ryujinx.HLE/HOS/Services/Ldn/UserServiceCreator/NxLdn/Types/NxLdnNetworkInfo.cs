@@ -2,7 +2,8 @@ using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types {
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
+{
     [StructLayout(LayoutKind.Sequential, Size = 1280)]
     internal struct NxLdnNetworkInfo
     {
@@ -33,8 +34,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types {
 
         public ulong AuthenticationId;
 
-        public LdnNetworkInfo ToLdnNetworkInfo() {
-            LdnNetworkInfo netInfo = new LdnNetworkInfo() {
+        public LdnNetworkInfo ToLdnNetworkInfo()
+        {
+            LdnNetworkInfo netInfo = new LdnNetworkInfo()
+            {
                 SecurityParameter = this.SecurityParameter,
                 SecurityMode = this.SecurityMode,
                 StationAcceptPolicy = this.StationAcceptPolicy,
@@ -58,8 +61,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types {
             return netInfo;
         }
 
-        public static NxLdnNetworkInfo FromLdnNetworkInfo(LdnNetworkInfo netInfo) {
-            NxLdnNetworkInfo nxNetInfo = new NxLdnNetworkInfo() {
+        public static NxLdnNetworkInfo FromLdnNetworkInfo(LdnNetworkInfo netInfo)
+        {
+            NxLdnNetworkInfo nxNetInfo = new NxLdnNetworkInfo()
+            {
                 SecurityParameter = netInfo.SecurityParameter,
                 SecurityMode = netInfo.SecurityMode,
                 StationAcceptPolicy = netInfo.StationAcceptPolicy,

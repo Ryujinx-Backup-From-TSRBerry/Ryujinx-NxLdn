@@ -2,8 +2,10 @@ using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
-    internal readonly struct AuthenticationFields {
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
+{
+    internal readonly struct AuthenticationFields
+    {
         public static readonly int LdnHeaderLength = Marshal.SizeOf<DataFrameHeader>();
         public static readonly int VersionPosition = LdnHeaderLength;
         public static readonly int VersionLength = 0x1;

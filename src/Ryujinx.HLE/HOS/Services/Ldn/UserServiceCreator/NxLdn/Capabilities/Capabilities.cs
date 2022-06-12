@@ -5,14 +5,18 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
 {
     // This is only needed for Linux
-    public static class Capabilities {
+    public static class Capabilities
+    {
         // TODO: Remove debug stuff
-        private static void LogMsg(string msg, object obj = null) {
-            if (obj != null) {
+        private static void LogMsg(string msg, object obj = null)
+        {
+            if (obj != null)
+            {
                 string jsonString = JsonHelper.Serialize<object>(obj, true);
                 Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n" + jsonString);
             }
-            else {
+            else
+            {
                 Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
             }
         }
@@ -46,7 +50,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
         [DllImport("libc", SetLastError = true)]
         public static extern int syscall(long number, ref UserCapHeaderStruct hdrp, ref UserCapDataStructArray datap);
 
-        public static bool InheritCapabilities() {
+        public static bool InheritCapabilities()
+        {
             UserCapHeaderStruct hs = new UserCapHeaderStruct
             {
                 pid = 0,
@@ -72,7 +77,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
             }
 
             LogMsg("Setting ambient capabilities...");
-            if (prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_RAISE, CAP_NET_ADMIN, 0, 0) != 0) {
+            if (prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_RAISE, CAP_NET_ADMIN, 0, 0) != 0)
+            {
                 int errno = Marshal.GetLastPInvokeError();
                 LogMsg($"PR_CAP_AMBIENT_RAISE failed for CAP_NET_ADMIN: {errno}");
                 return false;
