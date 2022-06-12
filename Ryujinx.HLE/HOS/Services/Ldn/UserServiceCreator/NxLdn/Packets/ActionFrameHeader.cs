@@ -18,6 +18,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public PacketType PacketType;
 
-        private ulong _pad2;
+        private uint _pad2;
     }
 }
