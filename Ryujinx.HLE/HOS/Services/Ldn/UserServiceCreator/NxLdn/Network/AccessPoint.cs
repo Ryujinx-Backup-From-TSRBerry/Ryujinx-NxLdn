@@ -13,7 +13,8 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 {
-    internal class AccessPoint {
+    internal class AccessPoint
+    {
         private static readonly PhysicalAddress broadcastAddr = new PhysicalAddress(new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff });
         private AdapterHandler _parent;
         private PacketArrivalEventHandler _eventHandler;
@@ -38,7 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         }
 
-        public void BuildNewNetworkInfo(CreateAccessPointRequest request, byte[] advertiseData) {
+        public void BuildNewNetworkInfo(CreateAccessPointRequest request, byte[] advertiseData)
+        {
             byte[] sessionId = new byte[16];
             Array.Resize(ref advertiseData, 384);
             _parent._random.NextBytes(sessionId);
@@ -92,11 +94,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             LogMsg("AP: New NetworkInfo created.");
         }
 
-        private RadioPacket GetAdvertisementFrame() {
+        private RadioPacket GetAdvertisementFrame()
+        {
             byte[] nonce = BitConverter.GetBytes(_parent._random.Next(0x10000000));
 
             RadioPacket radioPacket = new RadioPacket();
-            radioPacket.Add(new TsftRadioTapField()); // hopefully this generates the timestamp for us
+            radioPacket.Add(new TsftRadioTapField((ulong)new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()));
             radioPacket.Add(new FlagsRadioTapField(RadioTapFlags.FcsIncludedInFrame));
             ChannelRadioTapField channel = new ChannelRadioTapField();
             channel.Channel = _parent._networkInfo.Common.Channel;
@@ -115,16 +118,18 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 Nonce = nonce,
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
-            LogMsg("AP: Created AdvertisementFrame!");
-            advertisement.LogProps();
+            LogMsg("AP: Created AdvertisementFrame: ", advertisement);
+            // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
             radioPacket.PayloadPacket = action;
 
             return radioPacket;
         }
 
-        private void SpamActionFrame() {
-            while (_parent._adapter.Opened) {
+        private void SpamActionFrame()
+        {
+            while (_parent._adapter.Opened)
+            {
                 RadioPacket radioPacket = GetAdvertisementFrame();
                 _parent._adapter.SendPacket(radioPacket);
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
@@ -137,18 +142,21 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             }
         }
 
-        public AccessPoint(AdapterHandler handler) {
+        public AccessPoint(AdapterHandler handler)
+        {
             _parent = handler;
             _eventHandler = new PacketArrivalEventHandler(OnPacketArrival);
             _parent._adapter.OnPacketArrival += _eventHandler;
             t = new Thread(new ThreadStart(SpamActionFrame));
         }
 
-        ~AccessPoint() {
+        ~AccessPoint()
+        {
             _parent._adapter.OnPacketArrival -= _eventHandler;
         }
 
-        public bool Start() {
+        public bool Start()
+        {
             t.Start();
             return true;
         }

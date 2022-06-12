@@ -14,11 +14,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
 
         private byte[] _data;
 
-        public ChallengeRequest() {
+        public ChallengeRequest()
+        {
             _data = new byte[0x2D0];
         }
 
-        public ChallengeRequest(ChallengeRequestParameter challenge) {
+        public ChallengeRequest(ChallengeRequestParameter challenge)
+        {
             // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L331
             if (HMACSHA256.HashData(HmacKey, challenge.Body) != challenge.Hmac)
             {
@@ -27,37 +29,44 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
             _data = challenge.Body;
         }
 
-        private byte N1 {
+        private byte N1
+        {
             get => _data.Skip(2).First();
             set => _data[2] = value;
         }
 
-        private byte N2 {
+        private byte N2
+        {
             get => _data.Skip(3).First();
             set => _data[3] = value;
         }
 
-        private byte DebugCheck {
+        private byte DebugCheck
+        {
             get => _data.Skip(4).First();
             set => _data[4] = value;
         }
 
-        public ulong Token {
+        public ulong Token
+        {
             get => EndianBitConverter.Little.ToUInt64(_data, 8);
             set => EndianBitConverter.Little.CopyBytes(value, _data, 8);
         }
 
-        public ulong Nonce {
+        public ulong Nonce
+        {
             get => EndianBitConverter.Little.ToUInt64(_data, 16);
             set => EndianBitConverter.Little.CopyBytes(value, _data, 16);
         }
 
-        public ulong DeviceId {
+        public ulong DeviceId
+        {
             get => EndianBitConverter.Little.ToUInt64(_data, 24);
             set => EndianBitConverter.Little.CopyBytes(value, _data, 24);
         }
 
-        public ulong[] Params1 {
+        public ulong[] Params1
+        {
             get
             {
                 List<ulong> params1 = new List<ulong>(8);
@@ -98,8 +107,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
             }
         }
 
-        public ChallengeRequestParameter Encode() {
-            return new ChallengeRequestParameter() {
+        public ChallengeRequestParameter Encode()
+        {
+            return new ChallengeRequestParameter()
+            {
                 Hmac = HMACSHA256.HashData(HmacKey, _data),
                 Body = _data
             };

@@ -16,7 +16,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 {
     // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L181
     // Length: 1364 | in Ryujinx: 1368
-    internal sealed class AdvertisementFrame {
+    internal sealed class AdvertisementFrame
+    {
 
         private static readonly byte[] AdvertisementKeySource = { 0x19, 0x18, 0x84, 0x74, 0x3e, 0x24, 0xc7, 0x7d, 0x87, 0xc6, 0x9e, 0x42, 0x07, 0xd0, 0xc4, 0x38 };
 
@@ -38,59 +39,72 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         }
 
         // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L245
-        private byte[] MessageHeader {
+        private byte[] MessageHeader
+        {
             get => PacketHeader.Skip(AdvertisementFields.MessageHeaderPosition).Take(AdvertisementFields.MessageHeaderLength).ToArray();
-            set {
-                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.MessageHeaderLength) {
+            set
+            {
+                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.MessageHeaderLength)
+                {
                     Array.Resize(ref value, AdvertisementFields.MessageHeaderLength);
                     value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.MessageHeaderPosition);
                 }
-                else if (value == null) {
+                else if (value == null)
+                {
                     byte[] fillArr = new byte[AdvertisementFields.MessageHeaderLength];
                     Array.Fill<byte>(fillArr, 0);
                     fillArr.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.MessageHeaderPosition);
                 }
-                else {
+                else
+                {
                     throw new OverflowException();
                 }
             }
         }
 
-        private NetworkId _header {
+        private NetworkId _header
+        {
             get => LdnHelper.FromBytes<NetworkId>(
                     PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray()
                 );
             set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
         }
 
-        public NetworkId Header {
-            get {
+        public NetworkId Header
+        {
+            get
+            {
                 NetworkId netId = _header;
                 netId.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(netId.IntentId.LocalCommunicationId);
                 return netId;
             }
-            set {
+            set
+            {
                 // TODO: Does this affect the passed in value?
                 value.IntentId.LocalCommunicationId = BinaryPrimitives.ReverseEndianness(value.IntentId.LocalCommunicationId);
                 _header = value;
             }
         }
 
-        public byte Version {
+        public byte Version
+        {
             get => PacketHeader.Skip(AdvertisementFields.VersionPosition).First();
             set
             {
                 // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L253
-                if (new byte[] { 2, 3 }.Contains(value)) {
+                if (new byte[] { 2, 3 }.Contains(value))
+                {
                     PacketHeader.Bytes[PacketHeader.Offset + AdvertisementFields.VersionPosition] = value;
                 }
-                else {
+                else
+                {
                     throw new ArgumentException();
                 }
             }
         }
 
-        public byte Encryption {
+        public byte Encryption
+        {
             get => PacketHeader.Skip(AdvertisementFields.EncryptionPosition).First();
             set
             {
@@ -106,62 +120,75 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
         }
 
-        private ushort BodySize {
+        private ushort BodySize
+        {
             get => EndianBitConverter.Big.ToUInt16(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodySizePosition);
             set
             {
                 // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L262
-                if (value == AdvertisementFields.BodySizeValue) {
+                if (value == AdvertisementFields.BodySizeValue)
+                {
                     EndianBitConverter.Big.CopyBytes(value, PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodySizePosition);
                 }
-                else {
+                else
+                {
                     throw new ArgumentException();
                 }
             }
         }
 
-        public byte[] Nonce {
+        public byte[] Nonce
+        {
             get => PacketHeader.Skip(AdvertisementFields.NoncePosition).Take(AdvertisementFields.NonceLength).ToArray();
             set
             {
-                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.NonceLength) {
+                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.NonceLength)
+                {
                     Array.Resize<byte>(ref value, AdvertisementFields.NonceLength);
                     value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.NoncePosition);
                 }
-                else if (value == null) {
+                else if (value == null)
+                {
                     byte[] fillArr = new byte[AdvertisementFields.NonceLength];
                     Array.Fill<byte>(fillArr, 0);
                     fillArr.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.NoncePosition);
                 }
-                else {
+                else
+                {
                     throw new OverflowException();
                 }
             }
         }
 
-        private byte[] Body {
+        private byte[] Body
+        {
             get => Decrypt(PacketHeader.Skip(AdvertisementFields.BodyPosition).Take(AdvertisementFields.HashLength + BodySize).ToArray());
             set
             {
-                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.HashLength + BodySize) {
+                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.HashLength + BodySize)
+                {
                     Array.Resize<byte>(ref value, AdvertisementFields.HashLength + BodySize);
                     Encrypt(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodyPosition);
                 }
-                else if (value == null) {
+                else if (value == null)
+                {
                     byte[] fillArr = new byte[AdvertisementFields.HashLength + BodySize];
                     Array.Fill<byte>(fillArr, 0);
                     Encrypt(fillArr).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodyPosition);
                 }
-                else {
+                else
+                {
                     throw new OverflowException();
                 }
             }
         }
 
         // Sha
-        private byte[] Hash {
+        private byte[] Hash
+        {
             get => Body.Take(AdvertisementFields.HashLength).ToArray();
-            set {
+            set
+            {
                 if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.HashLength)
                 {
                     Array.Resize<byte>(ref value, AdvertisementFields.HashLength);
@@ -182,7 +209,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
 
         // Info
-        private byte[] Payload {
+        private byte[] Payload
+        {
             get => Body.Skip(AdvertisementFields.HashLength).ToArray();
             set
             {
@@ -204,7 +232,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
         }
 
-        private byte[] Message {
+        private byte[] Message
+        {
             get
             {
                 List<byte> message = new List<byte>();
@@ -215,10 +244,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), output);
                 // LogMsg("Message: ", message.ToArray());
                 // LogMsg("Message Hash: ", output.ToArray());
-                if (LibHac.Common.Utilities.ArraysEqual(output.ToArray(), Hash)) {
+                if (LibHac.Common.Utilities.ArraysEqual(output.ToArray(), Hash))
+                {
                     return message.ToArray();
                 }
-                else {
+                else
+                {
                     LogMsg("Generated message hash: ", output.ToArray());
                     LogMsg("Expected message hash: ", Hash);
                     throw new Exception();
@@ -226,7 +257,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
             set
             {
-                if (value != null && value.Length == AdvertisementFields.MessageHeaderLength + 0x20 + BodySize) {
+                if (value != null && value.Length == AdvertisementFields.MessageHeaderLength + 0x20 + BodySize)
+                {
                     MessageHeader = value.Take(AdvertisementFields.MessageHeaderLength).ToArray();
                     Payload = value.Skip(AdvertisementFields.MessageHeaderLength + 0x20).ToArray();
                     List<byte> message = new List<byte>();
@@ -237,14 +269,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                     LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), hash);
                     Hash = hash.ToArray();
                 }
-                else {
+                else
+                {
                     throw new ArgumentException();
                 }
             }
         }
 
-        public LdnNetworkInfo Info {
-            get {
+        public LdnNetworkInfo Info
+        {
+            get
+            {
                 NxLdnNetworkInfo ldnInfo = LdnHelper.FromBytes<NxLdnNetworkInfo>(Payload);
                 ldnInfo.SecurityMode = BinaryPrimitives.ReverseEndianness(ldnInfo.SecurityMode);
                 for (int i = 0; i < ldnInfo.Nodes.Length; i++)
@@ -256,21 +291,24 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 ldnInfo.AuthenticationId = BinaryPrimitives.ReverseEndianness(ldnInfo.AuthenticationId);
                 return ldnInfo.ToLdnNetworkInfo();
             }
-            set {
+            set
+            {
                 // TODO: Does this affect the passed in value?
                 value.SecurityMode = BinaryPrimitives.ReverseEndianness(value.SecurityMode);
-                for (int i = 0; i < value.Nodes.Length; i++) {
+                for (int i = 0; i < value.Nodes.Length; i++)
+                {
                     value.Nodes[i].Ipv4Address = BinaryPrimitives.ReverseEndianness(value.Nodes[i].Ipv4Address);
                     value.Nodes[i].LocalCommunicationVersion = BinaryPrimitives.ReverseEndianness(value.Nodes[i].LocalCommunicationVersion);
                 }
                 value.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(value.AdvertiseDataSize);
                 value.AuthenticationId = BinaryPrimitives.ReverseEndianness(value.AuthenticationId);
-                BodySize = (ushort) Marshal.SizeOf<NxLdnNetworkInfo>();
+                BodySize = (ushort)Marshal.SizeOf<NxLdnNetworkInfo>();
                 Payload = LdnHelper.StructureToByteArray(NxLdnNetworkInfo.FromLdnNetworkInfo(value));
             }
         }
 
-        private byte[] Encrypt(byte[] data) {
+        private byte[] Encrypt(byte[] data)
+        {
             if (Encryption == 1)
                 return data;
 
@@ -281,7 +319,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             return output.ToArray();
         }
 
-        private byte[] Decrypt(byte[] data) {
+        private byte[] Decrypt(byte[] data)
+        {
             if (Encryption == 1)
                 return data;
 
@@ -293,11 +332,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             return output.ToArray();
         }
 
-        public byte[] Encode() {
+        public byte[] Encode()
+        {
             return PacketHeader.ActualBytes();
         }
 
-        public void LogProps() {
+        public void LogProps()
+        {
             LogMsg($"MessageHeader[{MessageHeader.Length}]: ", MessageHeader);
             // LogMsg($"HeaderData[{AdvertisementFields.SessionInfoLength}]: ", PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray());
             // LogMsg($"Header[{Marshal.SizeOf<SessionInfo>()}]: ", Header);
@@ -313,20 +354,24 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             // LogMsg($"Info[{Marshal.SizeOf<LdnNetworkInfo>()}]: ", Info);
         }
 
-        public AdvertisementFrame() {
+        public AdvertisementFrame()
+        {
             PacketHeader = new ByteArraySegment(new byte[1368]);
             LdnHelper.StructureToByteArray(HeaderFields.Action).CopyTo(PacketHeader.Bytes, PacketHeader.Offset);
         }
 
-        private AdvertisementFrame(ByteArraySegment byteArraySegment) {
+        private AdvertisementFrame(ByteArraySegment byteArraySegment)
+        {
             PacketHeader = byteArraySegment;
 
             // LogMsg($"Data[{byteArraySegment.Length}]: ", byteArraySegment.ActualBytes());
             LogProps();
         }
 
-        public static bool TryGetAdvertisementFrame(ActionFrame action, out AdvertisementFrame adFrame) {
-            if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Action))) {
+        public static bool TryGetAdvertisementFrame(ActionFrame action, out AdvertisementFrame adFrame)
+        {
+            if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Action)))
+            {
                 adFrame = new AdvertisementFrame(action.PayloadDataSegment);
                 return true;
             }
