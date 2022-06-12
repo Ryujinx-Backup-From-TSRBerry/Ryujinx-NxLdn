@@ -1,8 +1,10 @@
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets {
-    internal readonly struct AdvertisementFields {
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
+{
+    internal readonly struct AdvertisementFields
+    {
         public static readonly int LdnHeaderLength = Marshal.SizeOf<ActionFrameHeader>();
         public static readonly int MessageHeaderPosition = LdnHeaderLength;
         public static readonly int MessageHeaderLength = 0x28;

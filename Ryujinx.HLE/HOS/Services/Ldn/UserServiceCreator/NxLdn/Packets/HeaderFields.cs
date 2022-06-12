@@ -10,7 +10,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L704
         // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-frame
-        public static readonly ActionFrameHeader Action = new ActionFrameHeader() {
+        public static readonly ActionFrameHeader Action = new ActionFrameHeader()
+        {
             Category = 0x7F,
             Oui = Oui,
             ProtocolId = 0x04,
@@ -18,7 +19,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         };
 
         // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#authentication-frame
-        public static readonly DataFrameHeader Authentication = new DataFrameHeader {
+        public static readonly DataFrameHeader Authentication = new DataFrameHeader
+        {
             Oui = Oui,
             PacketType = PacketType.Authentication
         };
