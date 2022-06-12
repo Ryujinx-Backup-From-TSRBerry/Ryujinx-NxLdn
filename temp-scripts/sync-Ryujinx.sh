@@ -25,6 +25,8 @@ rsync -avP --delete \
     --exclude "LICENSE.txt" \
     --exclude "**/bin" \
     --exclude "**/obj" \
+    --exclude "*.pcap" \
+    --exclude ".venv" \
     ./ $nxldn_dir
 
 cd -
