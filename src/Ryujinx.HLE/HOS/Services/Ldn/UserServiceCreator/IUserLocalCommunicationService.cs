@@ -1104,7 +1104,16 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                                 NetworkClient = new LdnMitmClient(context.Device.Configuration);
                                 break;
                             case MultiplayerMode.NxLdn:
-                                NetworkClient = new NxLdnClient(this, context.Device.Configuration);
+                                try
+                                {
+                                    NetworkClient = new NxLdnClient(this, context.Device.Configuration);
+                                }
+                                catch (Exception)
+                                {
+                                    Logger.Error?.Print(LogClass.ServiceLdn, "Could not create AdapterHandler. Defaulting to stubbed wireless.", "NxLdnClient");
+                                    NetworkClient = new DisabledLdnClient();
+                                }
+                                break;
                                 break;
                             case MultiplayerMode.Disabled:
                                 NetworkClient = new LdnDisabledClient();
