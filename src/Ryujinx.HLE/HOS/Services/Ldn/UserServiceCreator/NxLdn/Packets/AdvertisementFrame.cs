@@ -192,13 +192,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.HashLength)
                 {
                     Array.Resize<byte>(ref value, AdvertisementFields.HashLength);
-                    value.CopyTo(Body, 0);
+                    byte[] body = Body;
+                    value.CopyTo(body, 0);
+                    Body = body;
                 }
                 else if (value == null)
                 {
                     byte[] fillArr = new byte[AdvertisementFields.HashLength];
                     Array.Fill<byte>(fillArr, 0);
-                    fillArr.CopyTo(Body, 0);
+                    byte[] body = Body;
+                    fillArr.CopyTo(body, 0);
+                    Body = body;
                 }
                 else
                 {
@@ -217,13 +221,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 if (value != null && value.Length > 0 && value.Length <= BodySize)
                 {
                     Array.Resize<byte>(ref value, BodySize);
-                    value.CopyTo(Body, AdvertisementFields.HashLength);
+                    byte[] body = Body;
+                    value.CopyTo(body, AdvertisementFields.HashLength);
+                    Body = body;
                 }
                 else if (value == null)
                 {
                     byte[] fillArr = new byte[BodySize];
                     Array.Fill<byte>(fillArr, 0);
-                    fillArr.CopyTo(Body, AdvertisementFields.HashLength);
+                    byte[] body = Body;
+                    fillArr.CopyTo(body, AdvertisementFields.HashLength);
+                    Body = body;
                 }
                 else
                 {
@@ -376,6 +384,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             {
                 adFrame = new AdvertisementFrame(action.PayloadDataSegment);
                 return true;
+            }
+            else
+            {
+                LogMsg("Incorrect header:", action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).ToArray());
+                LogMsg("Expected header:", LdnHelper.StructureToByteArray(HeaderFields.Action));
             }
             adFrame = null;
             return false;
