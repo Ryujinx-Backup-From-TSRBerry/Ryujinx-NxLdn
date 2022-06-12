@@ -40,7 +40,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 Nonce = nonce,
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
+            advertisement.WriteHash();
             LogMsg("AP: Created AdvertisementFrame: ", advertisement);
+            LogMsg($"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
             radioPacket.PayloadPacket = action;

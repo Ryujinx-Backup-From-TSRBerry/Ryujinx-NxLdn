@@ -1,22 +1,16 @@
 using PacketDotNet;
 using PacketDotNet.Ieee80211;
-using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
-using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
 using System.Threading;
 using AuthenticationFrame = Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets.AuthenticationFrame;
 
