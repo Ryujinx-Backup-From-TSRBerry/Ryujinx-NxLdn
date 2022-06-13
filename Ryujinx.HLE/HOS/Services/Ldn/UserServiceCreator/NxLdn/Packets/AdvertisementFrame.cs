@@ -24,6 +24,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         // For PacketDotNet.Packet implementations this would usually be called Header
         private ByteArraySegment PacketHeader;
 
+        private bool _isBodyEncrypted;
+
         // TODO: Remove debug stuff
         private static void LogMsg(string msg, object obj = null)
         {
@@ -162,19 +164,19 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         private byte[] Body
         {
-            get => Decrypt(PacketHeader.Skip(AdvertisementFields.BodyPosition).Take(AdvertisementFields.HashLength + BodySize).ToArray());
+            get => PacketHeader.Skip(AdvertisementFields.BodyPosition).Take(AdvertisementFields.HashLength + BodySize).ToArray();
             set
             {
                 if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.HashLength + BodySize)
                 {
                     Array.Resize<byte>(ref value, AdvertisementFields.HashLength + BodySize);
-                    Encrypt(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodyPosition);
+                    value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodyPosition);
                 }
                 else if (value == null)
                 {
                     byte[] fillArr = new byte[AdvertisementFields.HashLength + BodySize];
                     Array.Fill<byte>(fillArr, 0);
-                    Encrypt(fillArr).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodyPosition);
+                    fillArr.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.BodyPosition);
                 }
                 else
                 {
@@ -299,6 +301,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public byte[] Encode()
         {
+            EncryptBody();
             return PacketHeader.ActualBytes();
         }
 
@@ -313,7 +316,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             message.AddRange(MessageHeader);
             message.AddRange(new byte[0x20]);
             message.AddRange(Payload);
-            LogMsg("Message: ", message.ToArray());
+            // LogMsg("Message: ", message.ToArray());
             Span<byte> output = new Span<byte>(new byte[AdvertisementFields.HashLength]);
             LibHac.Crypto.Sha256.GenerateSha256Hash(message.ToArray(), output);
             return output;
@@ -322,8 +325,22 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         public bool CheckHash()
         {
             Span<byte> actualHash = CalcHash();
-            LogMsg("Message Hash: ", actualHash.ToArray());
+            // LogMsg("Message Hash: ", actualHash.ToArray());
             return LibHac.Common.Utilities.ArraysEqual(actualHash.ToArray(), Hash);
+        }
+
+        public void EncryptBody()
+        {
+            if (!_isBodyEncrypted)
+                Body = Encrypt(Body);
+            _isBodyEncrypted = true;
+        }
+
+        public void DecryptBody()
+        {
+            if (_isBodyEncrypted)
+                Body = Decrypt(Body);
+            _isBodyEncrypted = false;
         }
 
         public void LogProps()
@@ -348,11 +365,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             PacketHeader = new ByteArraySegment(new byte[1368]);
             ActionFrameHeader actionHeader = HeaderFields.Action;
             MemoryMarshal.Write(PacketHeader.Bytes.AsSpan(PacketHeader.Offset), ref actionHeader);
+            _isBodyEncrypted = false;
         }
 
         private AdvertisementFrame(ByteArraySegment byteArraySegment)
         {
             PacketHeader = byteArraySegment;
+            _isBodyEncrypted = true;
 
             // LogMsg($"Data[{byteArraySegment.Length}]: ", byteArraySegment.ActualBytes());
             LogProps();
@@ -363,6 +382,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Action)))
             {
                 adFrame = new AdvertisementFrame(action.PayloadDataSegment);
+                adFrame.DecryptBody();
                 return adFrame.CheckHash();
             }
             else
