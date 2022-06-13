@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 Ldn = {
                     AdvertiseData = advertiseData,
                     AdvertiseDataSize = (ushort) advertiseData.Length,
-                    AuthenticationId = 0, // ?
+                    AuthenticationId = (ulong) _parent._random.NextInt64(),
                     NodeCount = 1,
                     NodeCountMax = request.NetworkConfig.NodeCountMax,
                     Nodes = new NodeInfo[8] {
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                     SecurityParameter = request.SecurityConfig.Passphrase,
                     StationAcceptPolicy = 0,
                     Unknown1 = 0,
-                    Unknown2 = new byte[140],
+                    Unknown2 = new byte[140]
                 }
             };
         }
@@ -92,14 +92,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         protected virtual RadioPacket GetAdvertisementFrame()
         {
             RadioPacket radioPacket = new RadioPacket();
+            // FIXME: Timestamps are wrong
             radioPacket.Add(new TsftRadioTapField((ulong)new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()));
             radioPacket.Add(new FlagsRadioTapField(RadioTapFlags.FcsIncludedInFrame));
-            ChannelRadioTapField channel = new ChannelRadioTapField();
-            channel.Channel = _parent._networkInfo.Common.Channel;
-            radioPacket.Add(channel);
+            radioPacket.Add(new ChannelRadioTapField(BaseAdapterHandler.ChannelToFrequencyMHz(_parent._networkInfo.Common.Channel), RadioTapChannelFlags.Channel2Ghz | RadioTapChannelFlags.DynamicCckOfdm));
             radioPacket.Add(new DbmAntennaSignalRadioTapField(-50)); // -50 dBm as a default value for now
             radioPacket.Add(new AntennaRadioTapField(0));
-            radioPacket.Add(new RxFlagsRadioTapField());
+            radioPacket.Add(new RxFlagsRadioTapField(false));
             // Mcs information Field missing
 
             return radioPacket;

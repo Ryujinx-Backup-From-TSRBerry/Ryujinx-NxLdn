@@ -52,9 +52,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         protected override void SpamActionFrame()
         {
+            RadioPacket radioPacket = GetAdvertisementFrame();
             while (_parent._adapter.Opened)
             {
-                RadioPacket radioPacket = GetAdvertisementFrame();
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
                     // LogMsg($"AP: Writing packet to file...");

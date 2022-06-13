@@ -44,6 +44,24 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
+        // NOTE: This should be part of: https://github.com/dotpcap/packetnet/blob/c4ba374674eeb1e7a7fd58ebcfe0b933505599f2/PacketDotNet/Ieee80211/RadioTapFields.cs
+        // Maybe I should PR this?
+        public static ushort ChannelToFrequencyMHz(ushort channel)
+        {
+            // NOTE: These will only include the channels the switch will use
+            switch (channel)
+            {
+                case 1:
+                    return 2412;
+                case 6:
+                    return 2437;
+                case 11:
+                    return 2462;
+                default:
+                    return 0;
+            }
+        }
+
         protected static bool BuildNetworkInfo(ushort channel, ActionFrame action, AdvertisementFrame advertisement, out NetworkInfo networkInfo)
         {
             byte[] sessionId = advertisement.Header.SessionId;
