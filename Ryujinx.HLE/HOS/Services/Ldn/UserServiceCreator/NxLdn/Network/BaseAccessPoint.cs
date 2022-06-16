@@ -89,20 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             };
         }
 
-        protected virtual RadioPacket GetAdvertisementFrame()
-        {
-            RadioPacket radioPacket = new RadioPacket();
-            // FIXME: Timestamps are wrong
-            radioPacket.Add(new TsftRadioTapField((ulong)new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()));
-            radioPacket.Add(new FlagsRadioTapField(RadioTapFlags.FcsIncludedInFrame));
-            radioPacket.Add(new ChannelRadioTapField(BaseAdapterHandler.ChannelToFrequencyMHz(_parent._networkInfo.Common.Channel), RadioTapChannelFlags.Channel2Ghz | RadioTapChannelFlags.DynamicCckOfdm));
-            radioPacket.Add(new DbmAntennaSignalRadioTapField(-50)); // -50 dBm as a default value for now
-            radioPacket.Add(new AntennaRadioTapField(0));
-            radioPacket.Add(new RxFlagsRadioTapField(false));
-            // Mcs information Field missing
-
-            return radioPacket;
-        }
+        protected abstract RadioPacket GetAdvertisementFrame();
 
         protected abstract void SpamActionFrame();
 

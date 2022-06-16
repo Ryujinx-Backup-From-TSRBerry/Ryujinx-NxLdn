@@ -46,21 +46,21 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         // NOTE: This should be part of: https://github.com/dotpcap/packetnet/blob/c4ba374674eeb1e7a7fd58ebcfe0b933505599f2/PacketDotNet/Ieee80211/RadioTapFields.cs
         // Maybe I should PR this?
-        public static ushort ChannelToFrequencyMHz(ushort channel)
-        {
-            // NOTE: These will only include the channels the switch will use
-            switch (channel)
-            {
-                case 1:
-                    return 2412;
-                case 6:
-                    return 2437;
-                case 11:
-                    return 2462;
-                default:
-                    return 0;
-            }
-        }
+        // public static ushort ChannelToFrequencyMHz(ushort channel)
+        // {
+        //     // NOTE: These will only include the channels the switch will use
+        //     switch (channel)
+        //     {
+        //         case 1:
+        //             return 2412;
+        //         case 6:
+        //             return 2437;
+        //         case 11:
+        //             return 2462;
+        //         default:
+        //             return 0;
+        //     }
+        // }
 
         protected static bool BuildNetworkInfo(ushort channel, ActionFrame action, AdvertisementFrame advertisement, out NetworkInfo networkInfo)
         {
@@ -88,6 +88,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             LogMsg($"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
 
             // LogMsg($"Built NetworkInfo: ", networkInfo);
+            // TODO: Remove debug stuff
+            string username = System.Text.Encoding.UTF8.GetString(networkInfo.Ldn.Nodes[0].UserName);
+            LogMsg($"Node 0 - Username: {username}");
 
             // https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)Swap_endianness('Raw',8,true)To_Hex('None',0)
             LogMsg($"LocalCommunicationId: ", BitConverter.GetBytes(networkInfo.NetworkId.IntentId.LocalCommunicationId));
@@ -136,6 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
                 // ActionFrame action = (ActionFrame) packet.PayloadPacket;
                 ActionFrame action = packet.Extract<ActionFrame>();
+                LogMsg($"OnScanPacketArrival: Got RadioPacket from: {action.SourceAddress.ToString()}");
                 // ActionFrame HasPayloadData -> Action(?)
                 // LogMsg($"OnScanPacketArrival: Action Frame: [{action.TotalPacketLength}] {action.ToString(StringOutputType.VerboseColored)}");
                 // LogMsg($"Action Payload: {action.HasPayloadPacket} / Action Data: {action.HasPayloadData}");
@@ -147,6 +151,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
                     if (BuildNetworkInfo(currentChannel, action, adFrame, out NetworkInfo networkInfo))
                     {
+                        LogMsg("Please tell me what's wrong: ", networkInfo);
                         if (!_scanResults.Contains(networkInfo))
                         {
                             _scanResults.Add(networkInfo);
