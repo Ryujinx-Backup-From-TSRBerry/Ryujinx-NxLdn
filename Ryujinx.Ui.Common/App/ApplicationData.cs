@@ -10,6 +10,8 @@ namespace Ryujinx.Ui.App.Common
         public string TitleName     { get; set; }
         public string TitleId       { get; set; }
         public string Developer     { get; set; }
+        public int PlayerCount 	    { get; set; }
+        public int GameCount        { get; set; }
         public string Version       { get; set; }
         public string TimePlayed    { get; set; }
         public string LastPlayed    { get; set; }

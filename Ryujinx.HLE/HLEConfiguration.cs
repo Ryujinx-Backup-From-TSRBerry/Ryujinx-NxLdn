@@ -1,6 +1,7 @@
 ﻿using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -153,6 +154,16 @@ namespace Ryujinx.HLE
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
 
+	public MultiplayerMode MultiplayerMode { internal get; set; }
+
+        public bool MultiplayerDisableP2p { internal get; set; }
+
+        public string MultiplayerLdnPassphrase { internal get; set; }
+
+        public bool MultiplayerEnableLan { internal get; set; }
+
+        public string MultiplayerLanInterfaceId { internal get; set; }
+
         public HLEConfiguration(VirtualFileSystem      virtualFileSystem,
                                 LibHacHorizonManager   libHacHorizonManager,
                                 ContentManager         contentManager,
@@ -175,31 +186,41 @@ namespace Ryujinx.HLE
                                 MemoryManagerMode      memoryManagerMode,
                                 bool                   ignoreMissingServices,
                                 AspectRatio            aspectRatio,
+				                MultiplayerMode        multiplayerMode,
+				                bool                   multiplayerDisableP2p,
+				                string                 multiplayerLdnPassphrase,
+				                bool                   multiplayerEnableLan,
+				                string                 multiplayerLanInterfaceId,
                                 float                  audioVolume)
         {
-            VirtualFileSystem      = virtualFileSystem;
-            LibHacHorizonManager   = libHacHorizonManager;
-            AccountManager         = accountManager;
-            ContentManager         = contentManager;
-            UserChannelPersistence = userChannelPersistence;
-            GpuRenderer            = gpuRenderer;
-            AudioDeviceDriver      = audioDeviceDriver;
-            MemoryConfiguration    = memoryConfiguration;
-            HostUiHandler          = hostUiHandler;
-            SystemLanguage         = systemLanguage;
-            Region                 = region;
-            EnableVsync            = enableVsync;
-            EnableDockedMode       = enableDockedMode;
-            EnablePtc              = enablePtc;
-            EnableInternetAccess   = enableInternetAccess;
-            FsIntegrityCheckLevel  = fsIntegrityCheckLevel;
-            FsGlobalAccessLogMode  = fsGlobalAccessLogMode;
-            SystemTimeOffset       = systemTimeOffset;
-            TimeZone               = timeZone;
-            MemoryManagerMode      = memoryManagerMode;
-            IgnoreMissingServices  = ignoreMissingServices;
-            AspectRatio            = aspectRatio;
-            AudioVolume            = audioVolume;
+            VirtualFileSystem         = virtualFileSystem;
+            LibHacHorizonManager      = libHacHorizonManager;
+            AccountManager            = accountManager;
+            ContentManager            = contentManager;
+            UserChannelPersistence    = userChannelPersistence;
+            GpuRenderer               = gpuRenderer;
+            AudioDeviceDriver         = audioDeviceDriver;
+            MemoryConfiguration       = memoryConfiguration;
+            HostUiHandler             = hostUiHandler;
+            SystemLanguage            = systemLanguage;
+            Region                    = region;
+            EnableVsync               = enableVsync;
+            EnableDockedMode          = enableDockedMode;
+            EnablePtc                 = enablePtc;
+            EnableInternetAccess      = enableInternetAccess;
+            FsIntegrityCheckLevel     = fsIntegrityCheckLevel;
+            FsGlobalAccessLogMode     = fsGlobalAccessLogMode;
+            SystemTimeOffset          = systemTimeOffset;
+            TimeZone                  = timeZone;
+            MemoryManagerMode         = memoryManagerMode;
+            IgnoreMissingServices     = ignoreMissingServices;
+            AspectRatio               = aspectRatio;
+            MultiplayerMode           = multiplayerMode;
+            MultiplayerDisableP2p     = multiplayerDisableP2p;
+            MultiplayerLdnPassphrase  = multiplayerLdnPassphrase;
+            MultiplayerEnableLan      = multiplayerEnableLan;
+            MultiplayerLanInterfaceId = multiplayerLanInterfaceId;
+            AudioVolume               = audioVolume;
         }
     }
 }

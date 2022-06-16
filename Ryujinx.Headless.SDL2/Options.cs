@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.HLE.HOS.SystemState;
 
 namespace Ryujinx.Headless.SDL2
@@ -112,7 +113,7 @@ namespace Ryujinx.Headless.SDL2
         [Option("memory-manager-mode", Required = false, Default = MemoryManagerMode.HostMappedUnsafe, HelpText = "The selected memory manager mode.")]
         public MemoryManagerMode MemoryManagerMode { get; set; }
 
-        [Option("audio-volume", Required = false, Default = 1.0f, HelpText ="The audio level (0 to 1).")]
+        [Option("audio-volume", Required = false, Default = 1.0f, HelpText = "The audio level (0 to 1).")]
         public float AudioVolume { get; set; }
 
         // Logging
@@ -171,6 +172,23 @@ namespace Ryujinx.Headless.SDL2
 
         [Option("ignore-missing-services", Required = false, Default = false, HelpText = "Enable ignoring missing services.")]
         public bool? IgnoreMissingServices { get; set; }
+
+        // Multiplayer
+
+        [Option("multiplayer-mode", Required = false, Default = MultiplayerMode.RyuLdn, HelpText = "Select multiplayer mode.")]
+        public MultiplayerMode MultiplayerMode { get; set; }
+
+        [Option("multiplayer-disable-p2p", Required = false, Default = false, HelpText = "Disable P2P.")]
+        public bool MultiplayerDisableP2p { get; set; }
+
+        [Option("multiplayer-ldn-passphrase", Required = false, HelpText = "Enter a multiplayer LDN passphrase.")]
+        public string MultiplayerLdnPassphrase { get; set; }
+
+        [Option("multiplayer-enable-lan", Required = false, Default = false, HelpText = "Enable LAN mode.")]
+        public bool MultiplayerEnableLan { get; set; }
+
+        [Option("multiplayer-lan-interface-id", Required = false, HelpText = "Enter a multiplayer LAN interface id.")]
+        public string MultiplayerLanInterfaceId { get; set; }
 
         // Values
 

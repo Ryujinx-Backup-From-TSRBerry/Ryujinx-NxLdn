@@ -3,6 +3,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui.Common.Configuration.System;
 using Ryujinx.Ui.Common.Configuration.Ui;
@@ -21,40 +22,42 @@ namespace Ryujinx.Ui.Common.Configuration
         {
             public class Columns
             {
-                public ReactiveObject<bool> FavColumn        { get; private set; }
-                public ReactiveObject<bool> IconColumn       { get; private set; }
-                public ReactiveObject<bool> AppColumn        { get; private set; }
-                public ReactiveObject<bool> DevColumn        { get; private set; }
-                public ReactiveObject<bool> VersionColumn    { get; private set; }
+                public ReactiveObject<bool> FavColumn { get; private set; }
+                public ReactiveObject<bool> IconColumn { get; private set; }
+                public ReactiveObject<bool> AppColumn { get; private set; }
+                public ReactiveObject<bool> DevColumn { get; private set; }
+                public ReactiveObject<bool> VersionColumn { get; private set; }
+                public ReactiveObject<bool> LdnInfoColumn { get; private set; }
                 public ReactiveObject<bool> TimePlayedColumn { get; private set; }
                 public ReactiveObject<bool> LastPlayedColumn { get; private set; }
-                public ReactiveObject<bool> FileExtColumn    { get; private set; }
-                public ReactiveObject<bool> FileSizeColumn   { get; private set; }
-                public ReactiveObject<bool> PathColumn       { get; private set; }
+                public ReactiveObject<bool> FileExtColumn { get; private set; }
+                public ReactiveObject<bool> FileSizeColumn { get; private set; }
+                public ReactiveObject<bool> PathColumn { get; private set; }
 
                 public Columns()
                 {
-                    FavColumn        = new ReactiveObject<bool>();
-                    IconColumn       = new ReactiveObject<bool>();
-                    AppColumn        = new ReactiveObject<bool>();
-                    DevColumn        = new ReactiveObject<bool>();
-                    VersionColumn    = new ReactiveObject<bool>();
+                    FavColumn = new ReactiveObject<bool>();
+                    IconColumn = new ReactiveObject<bool>();
+                    AppColumn = new ReactiveObject<bool>();
+                    LdnInfoColumn = new ReactiveObject<bool>();
+                    DevColumn = new ReactiveObject<bool>();
+                    VersionColumn = new ReactiveObject<bool>();
                     TimePlayedColumn = new ReactiveObject<bool>();
                     LastPlayedColumn = new ReactiveObject<bool>();
-                    FileExtColumn    = new ReactiveObject<bool>();
-                    FileSizeColumn   = new ReactiveObject<bool>();
-                    PathColumn       = new ReactiveObject<bool>();
+                    FileExtColumn = new ReactiveObject<bool>();
+                    FileSizeColumn = new ReactiveObject<bool>();
+                    PathColumn = new ReactiveObject<bool>();
                 }
             }
 
             public class ColumnSortSettings
             {
-                public ReactiveObject<int>  SortColumnId  { get; private set; }
+                public ReactiveObject<int> SortColumnId { get; private set; }
                 public ReactiveObject<bool> SortAscending { get; private set; }
 
                 public ColumnSortSettings()
                 {
-                    SortColumnId  = new ReactiveObject<int>();
+                    SortColumnId = new ReactiveObject<int>();
                     SortAscending = new ReactiveObject<bool>();
                 }
             }
@@ -131,20 +134,20 @@ namespace Ryujinx.Ui.Common.Configuration
 
             public UiSection()
             {
-                GuiColumns        = new Columns();
-                ColumnSort        = new ColumnSortSettings();
-                GameDirs          = new ReactiveObject<List<string>>();
+                GuiColumns = new Columns();
+                ColumnSort = new ColumnSortSettings();
+                GameDirs = new ReactiveObject<List<string>>();
                 EnableCustomTheme = new ReactiveObject<bool>();
-                CustomThemePath   = new ReactiveObject<string>();
-                BaseStyle         = new ReactiveObject<string>();
-                StartFullscreen   = new ReactiveObject<bool>();
-                GameListViewMode  = new ReactiveObject<int>();
-                ShowNames         = new ReactiveObject<bool>();
-                GridSize          = new ReactiveObject<int>();
-                ApplicationSort   = new ReactiveObject<int>();
-                IsAscendingOrder  = new ReactiveObject<bool>();
-                LanguageCode      = new ReactiveObject<string>();
-                ShowConsole       = new ReactiveObject<bool>();
+                CustomThemePath = new ReactiveObject<string>();
+                BaseStyle = new ReactiveObject<string>();
+                StartFullscreen = new ReactiveObject<bool>();
+                GameListViewMode = new ReactiveObject<int>();
+                ShowNames = new ReactiveObject<bool>();
+                GridSize = new ReactiveObject<int>();
+                ApplicationSort = new ReactiveObject<int>();
+                IsAscendingOrder = new ReactiveObject<bool>();
+                LanguageCode = new ReactiveObject<string>();
+                ShowConsole = new ReactiveObject<bool>();
                 ShowConsole.Event += static (s, e) => { ConsoleHelper.SetConsoleWindowState(e.NewValue); };
             }
         }
@@ -211,18 +214,18 @@ namespace Ryujinx.Ui.Common.Configuration
 
             public LoggerSection()
             {
-                EnableDebug         = new ReactiveObject<bool>();
-                EnableStub          = new ReactiveObject<bool>();
-                EnableInfo          = new ReactiveObject<bool>();
-                EnableWarn          = new ReactiveObject<bool>();
-                EnableError         = new ReactiveObject<bool>();
-                EnableTrace         = new ReactiveObject<bool>();
-                EnableGuest         = new ReactiveObject<bool>();
-                EnableFsAccessLog   = new ReactiveObject<bool>();
-                FilteredClasses     = new ReactiveObject<LogClass[]>();
-                EnableFileLog       = new ReactiveObject<bool>();
+                EnableDebug = new ReactiveObject<bool>();
+                EnableStub = new ReactiveObject<bool>();
+                EnableInfo = new ReactiveObject<bool>();
+                EnableWarn = new ReactiveObject<bool>();
+                EnableError = new ReactiveObject<bool>();
+                EnableTrace = new ReactiveObject<bool>();
+                EnableGuest = new ReactiveObject<bool>();
+                EnableFsAccessLog = new ReactiveObject<bool>();
+                FilteredClasses = new ReactiveObject<LogClass[]>();
+                EnableFileLog = new ReactiveObject<bool>();
                 EnableFileLog.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableFileLog));
-                GraphicsDebugLevel  = new ReactiveObject<GraphicsDebugLevel>();
+                GraphicsDebugLevel = new ReactiveObject<GraphicsDebugLevel>();
             }
         }
 
@@ -303,30 +306,30 @@ namespace Ryujinx.Ui.Common.Configuration
 
             public SystemSection()
             {
-                Language                      = new ReactiveObject<Language>();
-                Region                        = new ReactiveObject<Region>();
-                TimeZone                      = new ReactiveObject<string>();
-                SystemTimeOffset              = new ReactiveObject<long>();
-                EnableDockedMode              = new ReactiveObject<bool>();
-                EnableDockedMode.Event        += static (sender, e) => LogValueChange(sender, e, nameof(EnableDockedMode));
-                EnablePtc                     = new ReactiveObject<bool>();
-                EnablePtc.Event               += static (sender, e) => LogValueChange(sender, e, nameof(EnablePtc)); 
-                EnableInternetAccess          = new ReactiveObject<bool>();
-                EnableInternetAccess.Event    += static (sender, e) => LogValueChange(sender, e, nameof(EnableInternetAccess));
-                EnableFsIntegrityChecks       = new ReactiveObject<bool>();
+                Language = new ReactiveObject<Language>();
+                Region = new ReactiveObject<Region>();
+                TimeZone = new ReactiveObject<string>();
+                SystemTimeOffset = new ReactiveObject<long>();
+                EnableDockedMode = new ReactiveObject<bool>();
+                EnableDockedMode.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableDockedMode));
+                EnablePtc = new ReactiveObject<bool>();
+                EnablePtc.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnablePtc));
+                EnableInternetAccess = new ReactiveObject<bool>();
+                EnableInternetAccess.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableInternetAccess));
+                EnableFsIntegrityChecks = new ReactiveObject<bool>();
                 EnableFsIntegrityChecks.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableFsIntegrityChecks));
-                FsGlobalAccessLogMode         = new ReactiveObject<int>();
-                FsGlobalAccessLogMode.Event   += static (sender, e) => LogValueChange(sender, e, nameof(FsGlobalAccessLogMode));
-                AudioBackend                  = new ReactiveObject<AudioBackend>();
-                AudioBackend.Event            += static (sender, e) => LogValueChange(sender, e, nameof(AudioBackend));
-                MemoryManagerMode             = new ReactiveObject<MemoryManagerMode>();
-                MemoryManagerMode.Event       += static (sender, e) => LogValueChange(sender, e, nameof(MemoryManagerMode));
-                ExpandRam                     = new ReactiveObject<bool>();
-                ExpandRam.Event               += static (sender, e) => LogValueChange(sender, e, nameof(ExpandRam));
-                IgnoreMissingServices         = new ReactiveObject<bool>();
-                IgnoreMissingServices.Event   += static (sender, e) => LogValueChange(sender, e, nameof(IgnoreMissingServices));
-                AudioVolume                   = new ReactiveObject<float>();
-                AudioVolume.Event             += static (sender, e) => LogValueChange(sender, e, nameof(AudioVolume));
+                FsGlobalAccessLogMode = new ReactiveObject<int>();
+                FsGlobalAccessLogMode.Event += static (sender, e) => LogValueChange(sender, e, nameof(FsGlobalAccessLogMode));
+                AudioBackend = new ReactiveObject<AudioBackend>();
+                AudioBackend.Event += static (sender, e) => LogValueChange(sender, e, nameof(AudioBackend));
+                MemoryManagerMode = new ReactiveObject<MemoryManagerMode>();
+                MemoryManagerMode.Event += static (sender, e) => LogValueChange(sender, e, nameof(MemoryManagerMode));
+                ExpandRam = new ReactiveObject<bool>();
+                ExpandRam.Event += static (sender, e) => LogValueChange(sender, e, nameof(ExpandRam));
+                IgnoreMissingServices = new ReactiveObject<bool>();
+                IgnoreMissingServices.Event += static (sender, e) => LogValueChange(sender, e, nameof(IgnoreMissingServices));
+                AudioVolume = new ReactiveObject<float>();
+                AudioVolume.Event += static (sender, e) => LogValueChange(sender, e, nameof(AudioVolume));
             }
         }
 
@@ -360,9 +363,9 @@ namespace Ryujinx.Ui.Common.Configuration
             public HidSection()
             {
                 EnableKeyboard = new ReactiveObject<bool>();
-                EnableMouse    = new ReactiveObject<bool>();
-                Hotkeys        = new ReactiveObject<KeyboardHotkeys>();
-                InputConfig    = new ReactiveObject<List<InputConfig>>();
+                EnableMouse = new ReactiveObject<bool>();
+                Hotkeys = new ReactiveObject<KeyboardHotkeys>();
+                InputConfig = new ReactiveObject<List<InputConfig>>();
             }
         }
 
@@ -413,21 +416,46 @@ namespace Ryujinx.Ui.Common.Configuration
 
             public GraphicsSection()
             {
-                BackendThreading        = new ReactiveObject<BackendThreading>();
-                BackendThreading.Event  += static (sender, e) => LogValueChange(sender, e, nameof(BackendThreading));
-                ResScale                = new ReactiveObject<int>();
-                ResScale.Event          += static (sender, e) => LogValueChange(sender, e, nameof(ResScale));
-                ResScaleCustom          = new ReactiveObject<float>();
-                ResScaleCustom.Event    += static (sender, e) => LogValueChange(sender, e, nameof(ResScaleCustom));
-                MaxAnisotropy           = new ReactiveObject<float>();
-                MaxAnisotropy.Event     += static (sender, e) => LogValueChange(sender, e, nameof(MaxAnisotropy));
-                AspectRatio             = new ReactiveObject<AspectRatio>();
-                AspectRatio.Event       += static (sender, e) => LogValueChange(sender, e, nameof(AspectRatio));
-                ShadersDumpPath         = new ReactiveObject<string>();
-                EnableVsync             = new ReactiveObject<bool>();
-                EnableVsync.Event       += static (sender, e) => LogValueChange(sender, e, nameof(EnableVsync));
-                EnableShaderCache       = new ReactiveObject<bool>();
+                BackendThreading = new ReactiveObject<BackendThreading>();
+                BackendThreading.Event += static (sender, e) => LogValueChange(sender, e, nameof(BackendThreading));
+                ResScale = new ReactiveObject<int>();
+                ResScale.Event += static (sender, e) => LogValueChange(sender, e, nameof(ResScale));
+                ResScaleCustom = new ReactiveObject<float>();
+                ResScaleCustom.Event += static (sender, e) => LogValueChange(sender, e, nameof(ResScaleCustom));
+                MaxAnisotropy = new ReactiveObject<float>();
+                MaxAnisotropy.Event += static (sender, e) => LogValueChange(sender, e, nameof(MaxAnisotropy));
+                AspectRatio = new ReactiveObject<AspectRatio>();
+                AspectRatio.Event += static (sender, e) => LogValueChange(sender, e, nameof(AspectRatio));
+                ShadersDumpPath = new ReactiveObject<string>();
+                EnableVsync = new ReactiveObject<bool>();
+                EnableVsync.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableVsync));
+                EnableShaderCache = new ReactiveObject<bool>();
                 EnableShaderCache.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableShaderCache));
+            }
+        }
+
+        public class MultiplayerSection
+        {
+            public ReactiveObject<MultiplayerMode> Mode { get; private set; }
+
+            public ReactiveObject<bool> DisableP2p { get; private set; }
+
+            public ReactiveObject<string> Username { get; private set; }
+
+            public ReactiveObject<string> LdnPassphrase { get; private set; }
+
+            public ReactiveObject<bool> EnableLan { get; private set; }
+
+            public ReactiveObject<string> LanInterfaceId { get; private set; }
+
+            public MultiplayerSection()
+            {
+                Mode = new ReactiveObject<MultiplayerMode>();
+                DisableP2p = new ReactiveObject<bool>();
+                Username = new ReactiveObject<string>();
+                LdnPassphrase = new ReactiveObject<string>();
+                EnableLan = new ReactiveObject<bool>();
+                LanInterfaceId = new ReactiveObject<string>();
             }
         }
 
@@ -461,6 +489,8 @@ namespace Ryujinx.Ui.Common.Configuration
         /// </summary>
         public HidSection Hid { get; private set; }
 
+        public MultiplayerSection Multiplayer { get; private set; }
+
         /// <summary>
         /// Enables or disables Discord Rich Presence
         /// </summary>
@@ -483,95 +513,103 @@ namespace Ryujinx.Ui.Common.Configuration
 
         private ConfigurationState()
         {
-            Ui                       = new UiSection();
-            Logger                   = new LoggerSection();
-            System                   = new SystemSection();
-            Graphics                 = new GraphicsSection();
-            Hid                      = new HidSection();
+            Ui = new UiSection();
+            Logger = new LoggerSection();
+            System = new SystemSection();
+            Graphics = new GraphicsSection();
+            Hid = new HidSection();
+            Multiplayer = new MultiplayerSection();
             EnableDiscordIntegration = new ReactiveObject<bool>();
-            CheckUpdatesOnStart      = new ReactiveObject<bool>();
-            ShowConfirmExit          = new ReactiveObject<bool>();
-            HideCursorOnIdle         = new ReactiveObject<bool>();
+            CheckUpdatesOnStart = new ReactiveObject<bool>();
+            ShowConfirmExit = new ReactiveObject<bool>();
+            HideCursorOnIdle = new ReactiveObject<bool>();
         }
 
         public ConfigurationFileFormat ToFileFormat()
         {
             ConfigurationFileFormat configurationFile = new ConfigurationFileFormat
             {
-                Version                   = ConfigurationFileFormat.CurrentVersion,
-                BackendThreading          = Graphics.BackendThreading,
-                EnableFileLog             = Logger.EnableFileLog,
-                ResScale                  = Graphics.ResScale,
-                ResScaleCustom            = Graphics.ResScaleCustom,
-                MaxAnisotropy             = Graphics.MaxAnisotropy,
-                AspectRatio               = Graphics.AspectRatio,
-                GraphicsShadersDumpPath   = Graphics.ShadersDumpPath,
-                LoggingEnableDebug        = Logger.EnableDebug,
-                LoggingEnableStub         = Logger.EnableStub,
-                LoggingEnableInfo         = Logger.EnableInfo,
-                LoggingEnableWarn         = Logger.EnableWarn,
-                LoggingEnableError        = Logger.EnableError,
-                LoggingEnableTrace        = Logger.EnableTrace,
-                LoggingEnableGuest        = Logger.EnableGuest,
-                LoggingEnableFsAccessLog  = Logger.EnableFsAccessLog,
-                LoggingFilteredClasses    = Logger.FilteredClasses,
+                Version = ConfigurationFileFormat.CurrentVersion,
+                BackendThreading = Graphics.BackendThreading,
+                EnableFileLog = Logger.EnableFileLog,
+                ResScale = Graphics.ResScale,
+                ResScaleCustom = Graphics.ResScaleCustom,
+                MaxAnisotropy = Graphics.MaxAnisotropy,
+                AspectRatio = Graphics.AspectRatio,
+                GraphicsShadersDumpPath = Graphics.ShadersDumpPath,
+                LoggingEnableDebug = Logger.EnableDebug,
+                LoggingEnableStub = Logger.EnableStub,
+                LoggingEnableInfo = Logger.EnableInfo,
+                LoggingEnableWarn = Logger.EnableWarn,
+                LoggingEnableError = Logger.EnableError,
+                LoggingEnableTrace = Logger.EnableTrace,
+                LoggingEnableGuest = Logger.EnableGuest,
+                LoggingEnableFsAccessLog = Logger.EnableFsAccessLog,
+                LoggingFilteredClasses = Logger.FilteredClasses,
                 LoggingGraphicsDebugLevel = Logger.GraphicsDebugLevel,
-                SystemLanguage            = System.Language,
-                SystemRegion              = System.Region,
-                SystemTimeZone            = System.TimeZone,
-                SystemTimeOffset          = System.SystemTimeOffset,
-                DockedMode                = System.EnableDockedMode,
-                EnableDiscordIntegration  = EnableDiscordIntegration,
-                CheckUpdatesOnStart       = CheckUpdatesOnStart,
-                ShowConfirmExit           = ShowConfirmExit,
-                HideCursorOnIdle          = HideCursorOnIdle,
-                EnableVsync               = Graphics.EnableVsync,
-                EnableShaderCache         = Graphics.EnableShaderCache,
-                EnablePtc                 = System.EnablePtc,
-                EnableInternetAccess      = System.EnableInternetAccess,
-                EnableFsIntegrityChecks   = System.EnableFsIntegrityChecks,
-                FsGlobalAccessLogMode     = System.FsGlobalAccessLogMode,
-                AudioBackend              = System.AudioBackend,
-                AudioVolume               = System.AudioVolume,
-                MemoryManagerMode         = System.MemoryManagerMode,
-                ExpandRam                 = System.ExpandRam,
-                IgnoreMissingServices     = System.IgnoreMissingServices,
-                GuiColumns                = new GuiColumns
+                SystemLanguage = System.Language,
+                SystemRegion = System.Region,
+                SystemTimeZone = System.TimeZone,
+                SystemTimeOffset = System.SystemTimeOffset,
+                DockedMode = System.EnableDockedMode,
+                EnableDiscordIntegration = EnableDiscordIntegration,
+                CheckUpdatesOnStart = CheckUpdatesOnStart,
+                ShowConfirmExit = ShowConfirmExit,
+                HideCursorOnIdle = HideCursorOnIdle,
+                EnableVsync = Graphics.EnableVsync,
+                EnableShaderCache = Graphics.EnableShaderCache,
+                EnablePtc = System.EnablePtc,
+                EnableInternetAccess = System.EnableInternetAccess,
+                EnableFsIntegrityChecks = System.EnableFsIntegrityChecks,
+                FsGlobalAccessLogMode = System.FsGlobalAccessLogMode,
+                AudioBackend = System.AudioBackend,
+                AudioVolume = System.AudioVolume,
+                MemoryManagerMode = System.MemoryManagerMode,
+                ExpandRam = System.ExpandRam,
+                IgnoreMissingServices = System.IgnoreMissingServices,
+                GuiColumns = new GuiColumns
                 {
-                    FavColumn        = Ui.GuiColumns.FavColumn,
-                    IconColumn       = Ui.GuiColumns.IconColumn,
-                    AppColumn        = Ui.GuiColumns.AppColumn,
-                    DevColumn        = Ui.GuiColumns.DevColumn,
-                    VersionColumn    = Ui.GuiColumns.VersionColumn,
+                    FavColumn = Ui.GuiColumns.FavColumn,
+                    IconColumn = Ui.GuiColumns.IconColumn,
+                    AppColumn = Ui.GuiColumns.AppColumn,
+                    DevColumn = Ui.GuiColumns.DevColumn,
+                    VersionColumn = Ui.GuiColumns.VersionColumn,
+                    LdnInfoColumn = Ui.GuiColumns.LdnInfoColumn,
                     TimePlayedColumn = Ui.GuiColumns.TimePlayedColumn,
                     LastPlayedColumn = Ui.GuiColumns.LastPlayedColumn,
-                    FileExtColumn    = Ui.GuiColumns.FileExtColumn,
-                    FileSizeColumn   = Ui.GuiColumns.FileSizeColumn,
-                    PathColumn       = Ui.GuiColumns.PathColumn,
+                    FileExtColumn = Ui.GuiColumns.FileExtColumn,
+                    FileSizeColumn = Ui.GuiColumns.FileSizeColumn,
+                    PathColumn = Ui.GuiColumns.PathColumn,
                 },
-                ColumnSort                = new ColumnSort
+                ColumnSort = new ColumnSort
                 {
-                    SortColumnId  = Ui.ColumnSort.SortColumnId,
+                    SortColumnId = Ui.ColumnSort.SortColumnId,
                     SortAscending = Ui.ColumnSort.SortAscending
                 },
-                GameDirs                  = Ui.GameDirs,
-                LanguageCode              = Ui.LanguageCode,
-                EnableCustomTheme         = Ui.EnableCustomTheme,
-                CustomThemePath           = Ui.CustomThemePath,
-                BaseStyle                 = Ui.BaseStyle,
-                GameListViewMode          = Ui.GameListViewMode,
-                ShowNames                 = Ui.ShowNames,
-                GridSize                  = Ui.GridSize,
-                ApplicationSort           = Ui.ApplicationSort,
-                IsAscendingOrder          = Ui.IsAscendingOrder,
-                StartFullscreen           = Ui.StartFullscreen,
-                ShowConsole               = Ui.ShowConsole,
-                EnableKeyboard            = Hid.EnableKeyboard,
-                EnableMouse               = Hid.EnableMouse,
-                Hotkeys                   = Hid.Hotkeys,
-                KeyboardConfig            = new List<object>(),
-                ControllerConfig          = new List<object>(),
-                InputConfig               = Hid.InputConfig,
+                GameDirs = Ui.GameDirs,
+                LanguageCode = Ui.LanguageCode,
+                EnableCustomTheme = Ui.EnableCustomTheme,
+                CustomThemePath = Ui.CustomThemePath,
+                BaseStyle = Ui.BaseStyle,
+                GameListViewMode = Ui.GameListViewMode,
+                ShowNames = Ui.ShowNames,
+                GridSize = Ui.GridSize,
+                ApplicationSort = Ui.ApplicationSort,
+                IsAscendingOrder = Ui.IsAscendingOrder,
+                StartFullscreen = Ui.StartFullscreen,
+                ShowConsole = Ui.ShowConsole,
+                EnableKeyboard = Hid.EnableKeyboard,
+                EnableMouse = Hid.EnableMouse,
+                Hotkeys = Hid.Hotkeys,
+                KeyboardConfig = new List<object>(),
+                ControllerConfig = new List<object>(),
+                InputConfig = Hid.InputConfig,
+                MultiplayerMode = Multiplayer.Mode,
+                MultiplayerDisableP2p = Multiplayer.DisableP2p,
+                MultiplayerUsername = Multiplayer.Username,
+                MultiplayerLdnPassphrase = Multiplayer.LdnPassphrase,
+                MultiplayerEnableLan = Multiplayer.EnableLan,
+                MultiplayerLanInterfaceId = Multiplayer.LanInterfaceId
             };
 
             return configurationFile;
@@ -579,69 +617,76 @@ namespace Ryujinx.Ui.Common.Configuration
 
         public void LoadDefault()
         {
-            Logger.EnableFileLog.Value             = true;
-            Graphics.BackendThreading.Value        = BackendThreading.Auto;
-            Graphics.ResScale.Value                = 1;
-            Graphics.ResScaleCustom.Value          = 1.0f;
-            Graphics.MaxAnisotropy.Value           = -1.0f;
-            Graphics.AspectRatio.Value             = AspectRatio.Fixed16x9;
-            Graphics.ShadersDumpPath.Value         = "";
-            Logger.EnableDebug.Value               = false;
-            Logger.EnableStub.Value                = true;
-            Logger.EnableInfo.Value                = true;
-            Logger.EnableWarn.Value                = true;
-            Logger.EnableError.Value               = true;
-            Logger.EnableTrace.Value               = false;
-            Logger.EnableGuest.Value               = true;
-            Logger.EnableFsAccessLog.Value         = false;
-            Logger.FilteredClasses.Value           = Array.Empty<LogClass>();
-            Logger.GraphicsDebugLevel.Value        = GraphicsDebugLevel.None;
-            System.Language.Value                  = Language.AmericanEnglish;
-            System.Region.Value                    = Region.USA;
-            System.TimeZone.Value                  = "UTC";
-            System.SystemTimeOffset.Value          = 0;
-            System.EnableDockedMode.Value          = true;
-            EnableDiscordIntegration.Value         = true;
-            CheckUpdatesOnStart.Value              = true;
-            ShowConfirmExit.Value                  = true;
-            HideCursorOnIdle.Value                 = false;
-            Graphics.EnableVsync.Value             = true;
-            Graphics.EnableShaderCache.Value       = true;
-            System.EnablePtc.Value                 = true;
-            System.EnableInternetAccess.Value      = false;
-            System.EnableFsIntegrityChecks.Value   = true;
-            System.FsGlobalAccessLogMode.Value     = 0;
-            System.AudioBackend.Value              = AudioBackend.SDL2;
-            System.AudioVolume.Value               = 1;
-            System.MemoryManagerMode.Value         = MemoryManagerMode.HostMappedUnsafe;
-            System.ExpandRam.Value                 = false;
-            System.IgnoreMissingServices.Value     = false;
-            Ui.GuiColumns.FavColumn.Value          = true;
-            Ui.GuiColumns.IconColumn.Value         = true;
-            Ui.GuiColumns.AppColumn.Value          = true;
-            Ui.GuiColumns.DevColumn.Value          = true;
-            Ui.GuiColumns.VersionColumn.Value      = true;
-            Ui.GuiColumns.TimePlayedColumn.Value   = true;
-            Ui.GuiColumns.LastPlayedColumn.Value   = true;
-            Ui.GuiColumns.FileExtColumn.Value      = true;
-            Ui.GuiColumns.FileSizeColumn.Value     = true;
-            Ui.GuiColumns.PathColumn.Value         = true;
-            Ui.ColumnSort.SortColumnId.Value       = 0;
-            Ui.ColumnSort.SortAscending.Value      = false;
-            Ui.GameDirs.Value                      = new List<string>();
-            Ui.EnableCustomTheme.Value             = false;
-            Ui.LanguageCode.Value                  = "en_US";
-            Ui.CustomThemePath.Value               = "";
-            Ui.BaseStyle.Value                     = "Dark";
-            Ui.GameListViewMode.Value              = 0;
-            Ui.ShowNames.Value                     = true;
-            Ui.GridSize.Value                      = 2;
-            Ui.ApplicationSort.Value               = 0;
-            Ui.IsAscendingOrder.Value              = true;
-            Ui.StartFullscreen.Value               = false;
-            Ui.ShowConsole.Value                   = true;
-            Hid.EnableKeyboard.Value               = false;
-            Hid.EnableMouse.Value                  = false;
+            Logger.EnableFileLog.Value = true;
+            Graphics.BackendThreading.Value = BackendThreading.Auto;
+            Graphics.ResScale.Value = 1;
+            Graphics.ResScaleCustom.Value = 1.0f;
+            Graphics.MaxAnisotropy.Value = -1.0f;
+            Graphics.AspectRatio.Value = AspectRatio.Fixed16x9;
+            Graphics.ShadersDumpPath.Value = "";
+            Logger.EnableDebug.Value = false;
+            Logger.EnableStub.Value = true;
+            Logger.EnableInfo.Value = true;
+            Logger.EnableWarn.Value = true;
+            Logger.EnableError.Value = true;
+            Logger.EnableTrace.Value = false;
+            Logger.EnableGuest.Value = true;
+            Logger.EnableFsAccessLog.Value = false;
+            Logger.FilteredClasses.Value = Array.Empty<LogClass>();
+            Logger.GraphicsDebugLevel.Value = GraphicsDebugLevel.None;
+            System.Language.Value = Language.AmericanEnglish;
+            System.Region.Value = Region.USA;
+            System.TimeZone.Value = "UTC";
+            System.SystemTimeOffset.Value = 0;
+            System.EnableDockedMode.Value = true;
+            EnableDiscordIntegration.Value = true;
+            CheckUpdatesOnStart.Value = true;
+            ShowConfirmExit.Value = true;
+            HideCursorOnIdle.Value = false;
+            Graphics.EnableVsync.Value = true;
+            Graphics.EnableShaderCache.Value = true;
+            System.EnablePtc.Value = true;
+            System.EnableInternetAccess.Value = false;
+            System.EnableFsIntegrityChecks.Value = true;
+            System.FsGlobalAccessLogMode.Value = 0;
+            System.AudioBackend.Value = AudioBackend.SDL2;
+            System.AudioVolume.Value = 1;
+            System.MemoryManagerMode.Value = MemoryManagerMode.HostMappedUnsafe;
+            System.ExpandRam.Value = false;
+            System.IgnoreMissingServices.Value = false;
+            Multiplayer.Mode.Value = MultiplayerMode.RyuLdn;
+            Multiplayer.DisableP2p.Value = false;
+            Multiplayer.Username.Value = "Player";
+            Multiplayer.LdnPassphrase.Value = "";
+            Multiplayer.EnableLan.Value = false;
+            Multiplayer.LanInterfaceId.Value = "0";
+            Ui.GuiColumns.FavColumn.Value = true;
+            Ui.GuiColumns.IconColumn.Value = true;
+            Ui.GuiColumns.AppColumn.Value = true;
+            Ui.GuiColumns.DevColumn.Value = true;
+            Ui.GuiColumns.VersionColumn.Value = true;
+            Ui.GuiColumns.LdnInfoColumn.Value = true;
+            Ui.GuiColumns.TimePlayedColumn.Value = true;
+            Ui.GuiColumns.LastPlayedColumn.Value = true;
+            Ui.GuiColumns.FileExtColumn.Value = true;
+            Ui.GuiColumns.FileSizeColumn.Value = true;
+            Ui.GuiColumns.PathColumn.Value = true;
+            Ui.ColumnSort.SortColumnId.Value = 0;
+            Ui.ColumnSort.SortAscending.Value = false;
+            Ui.GameDirs.Value = new List<string>();
+            Ui.EnableCustomTheme.Value = false;
+            Ui.LanguageCode.Value = "en_US";
+            Ui.CustomThemePath.Value = "";
+            Ui.BaseStyle.Value = "Dark";
+            Ui.GameListViewMode.Value = 0;
+            Ui.ShowNames.Value = true;
+            Ui.GridSize.Value = 2;
+            Ui.ApplicationSort.Value = 0;
+            Ui.IsAscendingOrder.Value = true;
+            Ui.StartFullscreen.Value = false;
+            Ui.ShowConsole.Value = true;
+            Hid.EnableKeyboard.Value = false;
+            Hid.EnableMouse.Value = false;
             Hid.Hotkeys.Value = new KeyboardHotkeys
             {
                 ToggleVsync = Key.Tab,
@@ -770,7 +815,7 @@ namespace Ryujinx.Ui.Common.Configuration
 
                 configurationFileFormat.ColumnSort = new ColumnSort
                 {
-                    SortColumnId  = 0,
+                    SortColumnId = 0,
                     SortAscending = false
                 };
 
@@ -967,7 +1012,7 @@ namespace Ryujinx.Ui.Common.Configuration
             if (configurationFileFormat.Version < 29)
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 29.");
-                
+
                 configurationFileFormat.Hotkeys = new KeyboardHotkeys
                 {
                     ToggleVsync = Key.Tab,
@@ -982,7 +1027,7 @@ namespace Ryujinx.Ui.Common.Configuration
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 30.");
 
-                foreach(InputConfig config in configurationFileFormat.InputConfig)
+                foreach (InputConfig config in configurationFileFormat.InputConfig)
                 {
                     if (config is StandardControllerInputConfig controllerConfig)
                     {
@@ -1057,7 +1102,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 {
                     if (config is StandardControllerInputConfig controllerConfig)
                     {
-                        controllerConfig.RangeLeft  = 1.0f;
+                        controllerConfig.RangeLeft = 1.0f;
                         controllerConfig.RangeRight = 1.0f;
                     }
                 }
@@ -1087,86 +1132,92 @@ namespace Ryujinx.Ui.Common.Configuration
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 38.");
 
-                configurationFileFormat.BaseStyle        = "Dark";
+                configurationFileFormat.BaseStyle = "Dark";
                 configurationFileFormat.GameListViewMode = 0;
-                configurationFileFormat.ShowNames        = true;
-                configurationFileFormat.GridSize         = 2;
-                configurationFileFormat.LanguageCode     = "en_US";
+                configurationFileFormat.ShowNames = true;
+                configurationFileFormat.GridSize = 2;
+                configurationFileFormat.LanguageCode = "en_US";
 
                 configurationFileUpdated = true;
             }
 
-            Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
-            Graphics.ResScale.Value                = configurationFileFormat.ResScale;
-            Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;
-            Graphics.MaxAnisotropy.Value           = configurationFileFormat.MaxAnisotropy;
-            Graphics.AspectRatio.Value             = configurationFileFormat.AspectRatio;
-            Graphics.ShadersDumpPath.Value         = configurationFileFormat.GraphicsShadersDumpPath;
-            Graphics.BackendThreading.Value        = configurationFileFormat.BackendThreading;
-            Logger.EnableDebug.Value               = configurationFileFormat.LoggingEnableDebug;
-            Logger.EnableStub.Value                = configurationFileFormat.LoggingEnableStub;
-            Logger.EnableInfo.Value                = configurationFileFormat.LoggingEnableInfo;
-            Logger.EnableWarn.Value                = configurationFileFormat.LoggingEnableWarn;
-            Logger.EnableError.Value               = configurationFileFormat.LoggingEnableError;
-            Logger.EnableTrace.Value               = configurationFileFormat.LoggingEnableTrace;
-            Logger.EnableGuest.Value               = configurationFileFormat.LoggingEnableGuest;
-            Logger.EnableFsAccessLog.Value         = configurationFileFormat.LoggingEnableFsAccessLog;
-            Logger.FilteredClasses.Value           = configurationFileFormat.LoggingFilteredClasses;
-            Logger.GraphicsDebugLevel.Value        = configurationFileFormat.LoggingGraphicsDebugLevel;
-            System.Language.Value                  = configurationFileFormat.SystemLanguage;
-            System.Region.Value                    = configurationFileFormat.SystemRegion;
-            System.TimeZone.Value                  = configurationFileFormat.SystemTimeZone;
-            System.SystemTimeOffset.Value          = configurationFileFormat.SystemTimeOffset;
-            System.EnableDockedMode.Value          = configurationFileFormat.DockedMode;
-            EnableDiscordIntegration.Value         = configurationFileFormat.EnableDiscordIntegration;
-            CheckUpdatesOnStart.Value              = configurationFileFormat.CheckUpdatesOnStart;
-            ShowConfirmExit.Value                  = configurationFileFormat.ShowConfirmExit;
-            HideCursorOnIdle.Value                 = configurationFileFormat.HideCursorOnIdle;
-            Graphics.EnableVsync.Value             = configurationFileFormat.EnableVsync;
-            Graphics.EnableShaderCache.Value       = configurationFileFormat.EnableShaderCache;
-            System.EnablePtc.Value                 = configurationFileFormat.EnablePtc;
-            System.EnableInternetAccess.Value      = configurationFileFormat.EnableInternetAccess;
-            System.EnableFsIntegrityChecks.Value   = configurationFileFormat.EnableFsIntegrityChecks;
-            System.FsGlobalAccessLogMode.Value     = configurationFileFormat.FsGlobalAccessLogMode;
-            System.AudioBackend.Value              = configurationFileFormat.AudioBackend;
-            System.AudioVolume.Value               = configurationFileFormat.AudioVolume;
-            System.MemoryManagerMode.Value         = configurationFileFormat.MemoryManagerMode;
-            System.ExpandRam.Value                 = configurationFileFormat.ExpandRam;
-            System.IgnoreMissingServices.Value     = configurationFileFormat.IgnoreMissingServices;
-            Ui.GuiColumns.FavColumn.Value          = configurationFileFormat.GuiColumns.FavColumn;
-            Ui.GuiColumns.IconColumn.Value         = configurationFileFormat.GuiColumns.IconColumn;
-            Ui.GuiColumns.AppColumn.Value          = configurationFileFormat.GuiColumns.AppColumn;
-            Ui.GuiColumns.DevColumn.Value          = configurationFileFormat.GuiColumns.DevColumn;
-            Ui.GuiColumns.VersionColumn.Value      = configurationFileFormat.GuiColumns.VersionColumn;
-            Ui.GuiColumns.TimePlayedColumn.Value   = configurationFileFormat.GuiColumns.TimePlayedColumn;
-            Ui.GuiColumns.LastPlayedColumn.Value   = configurationFileFormat.GuiColumns.LastPlayedColumn;
-            Ui.GuiColumns.FileExtColumn.Value      = configurationFileFormat.GuiColumns.FileExtColumn;
-            Ui.GuiColumns.FileSizeColumn.Value     = configurationFileFormat.GuiColumns.FileSizeColumn;
-            Ui.GuiColumns.PathColumn.Value         = configurationFileFormat.GuiColumns.PathColumn;
-            Ui.ColumnSort.SortColumnId.Value       = configurationFileFormat.ColumnSort.SortColumnId;
-            Ui.ColumnSort.SortAscending.Value      = configurationFileFormat.ColumnSort.SortAscending;
-            Ui.GameDirs.Value                      = configurationFileFormat.GameDirs;
-            Ui.EnableCustomTheme.Value             = configurationFileFormat.EnableCustomTheme;
-            Ui.LanguageCode.Value                  = configurationFileFormat.LanguageCode;
-            Ui.CustomThemePath.Value               = configurationFileFormat.CustomThemePath;
-            Ui.BaseStyle.Value                     = configurationFileFormat.BaseStyle;
-            Ui.GameListViewMode.Value              = configurationFileFormat.GameListViewMode;
-            Ui.ShowNames.Value                     = configurationFileFormat.ShowNames;
-            Ui.IsAscendingOrder.Value              = configurationFileFormat.IsAscendingOrder;
-            Ui.GridSize.Value                      = configurationFileFormat.GridSize;
-            Ui.ApplicationSort.Value               = configurationFileFormat.ApplicationSort;
-            Ui.StartFullscreen.Value               = configurationFileFormat.StartFullscreen;
-            Ui.ShowConsole.Value                   = configurationFileFormat.ShowConsole;
-            Hid.EnableKeyboard.Value               = configurationFileFormat.EnableKeyboard;
-            Hid.EnableMouse.Value                  = configurationFileFormat.EnableMouse;
-            Hid.Hotkeys.Value                      = configurationFileFormat.Hotkeys;
-            Hid.InputConfig.Value                  = configurationFileFormat.InputConfig;
+            Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
+            Graphics.ResScale.Value = configurationFileFormat.ResScale;
+            Graphics.ResScaleCustom.Value = configurationFileFormat.ResScaleCustom;
+            Graphics.MaxAnisotropy.Value = configurationFileFormat.MaxAnisotropy;
+            Graphics.AspectRatio.Value = configurationFileFormat.AspectRatio;
+            Graphics.ShadersDumpPath.Value = configurationFileFormat.GraphicsShadersDumpPath;
+            Graphics.BackendThreading.Value = configurationFileFormat.BackendThreading;
+            Logger.EnableDebug.Value = configurationFileFormat.LoggingEnableDebug;
+            Logger.EnableStub.Value = configurationFileFormat.LoggingEnableStub;
+            Logger.EnableInfo.Value = configurationFileFormat.LoggingEnableInfo;
+            Logger.EnableWarn.Value = configurationFileFormat.LoggingEnableWarn;
+            Logger.EnableError.Value = configurationFileFormat.LoggingEnableError;
+            Logger.EnableTrace.Value = configurationFileFormat.LoggingEnableTrace;
+            Logger.EnableGuest.Value = configurationFileFormat.LoggingEnableGuest;
+            Logger.EnableFsAccessLog.Value = configurationFileFormat.LoggingEnableFsAccessLog;
+            Logger.FilteredClasses.Value = configurationFileFormat.LoggingFilteredClasses;
+            Logger.GraphicsDebugLevel.Value = configurationFileFormat.LoggingGraphicsDebugLevel;
+            System.Language.Value = configurationFileFormat.SystemLanguage;
+            System.Region.Value = configurationFileFormat.SystemRegion;
+            System.TimeZone.Value = configurationFileFormat.SystemTimeZone;
+            System.SystemTimeOffset.Value = configurationFileFormat.SystemTimeOffset;
+            System.EnableDockedMode.Value = configurationFileFormat.DockedMode;
+            EnableDiscordIntegration.Value = configurationFileFormat.EnableDiscordIntegration;
+            CheckUpdatesOnStart.Value = configurationFileFormat.CheckUpdatesOnStart;
+            ShowConfirmExit.Value = configurationFileFormat.ShowConfirmExit;
+            HideCursorOnIdle.Value = configurationFileFormat.HideCursorOnIdle;
+            Graphics.EnableVsync.Value = configurationFileFormat.EnableVsync;
+            Graphics.EnableShaderCache.Value = configurationFileFormat.EnableShaderCache;
+            System.EnablePtc.Value = configurationFileFormat.EnablePtc;
+            System.EnableInternetAccess.Value = configurationFileFormat.EnableInternetAccess;
+            System.EnableFsIntegrityChecks.Value = configurationFileFormat.EnableFsIntegrityChecks;
+            System.FsGlobalAccessLogMode.Value = configurationFileFormat.FsGlobalAccessLogMode;
+            System.AudioBackend.Value = configurationFileFormat.AudioBackend;
+            System.AudioVolume.Value = configurationFileFormat.AudioVolume;
+            System.MemoryManagerMode.Value = configurationFileFormat.MemoryManagerMode;
+            System.ExpandRam.Value = configurationFileFormat.ExpandRam;
+            System.IgnoreMissingServices.Value = configurationFileFormat.IgnoreMissingServices;
+            Ui.GuiColumns.FavColumn.Value = configurationFileFormat.GuiColumns.FavColumn;
+            Ui.GuiColumns.IconColumn.Value = configurationFileFormat.GuiColumns.IconColumn;
+            Ui.GuiColumns.AppColumn.Value = configurationFileFormat.GuiColumns.AppColumn;
+            Ui.GuiColumns.DevColumn.Value = configurationFileFormat.GuiColumns.DevColumn;
+            Ui.GuiColumns.VersionColumn.Value = configurationFileFormat.GuiColumns.VersionColumn;
+            Ui.GuiColumns.LdnInfoColumn.Value = configurationFileFormat.GuiColumns.LdnInfoColumn;
+            Ui.GuiColumns.TimePlayedColumn.Value = configurationFileFormat.GuiColumns.TimePlayedColumn;
+            Ui.GuiColumns.LastPlayedColumn.Value = configurationFileFormat.GuiColumns.LastPlayedColumn;
+            Ui.GuiColumns.FileExtColumn.Value = configurationFileFormat.GuiColumns.FileExtColumn;
+            Ui.GuiColumns.FileSizeColumn.Value = configurationFileFormat.GuiColumns.FileSizeColumn;
+            Ui.GuiColumns.PathColumn.Value = configurationFileFormat.GuiColumns.PathColumn;
+            Ui.ColumnSort.SortColumnId.Value = configurationFileFormat.ColumnSort.SortColumnId;
+            Ui.ColumnSort.SortAscending.Value = configurationFileFormat.ColumnSort.SortAscending;
+            Ui.GameDirs.Value = configurationFileFormat.GameDirs;
+            Ui.EnableCustomTheme.Value = configurationFileFormat.EnableCustomTheme;
+            Ui.LanguageCode.Value = configurationFileFormat.LanguageCode;
+            Ui.CustomThemePath.Value = configurationFileFormat.CustomThemePath;
+            Ui.BaseStyle.Value = configurationFileFormat.BaseStyle;
+            Ui.GameListViewMode.Value = configurationFileFormat.GameListViewMode;
+            Ui.ShowNames.Value = configurationFileFormat.ShowNames;
+            Ui.IsAscendingOrder.Value = configurationFileFormat.IsAscendingOrder;
+            Ui.GridSize.Value = configurationFileFormat.GridSize;
+            Ui.ApplicationSort.Value = configurationFileFormat.ApplicationSort;
+            Ui.StartFullscreen.Value = configurationFileFormat.StartFullscreen;
+            Ui.ShowConsole.Value = configurationFileFormat.ShowConsole;
+            Hid.EnableKeyboard.Value = configurationFileFormat.EnableKeyboard;
+            Hid.EnableMouse.Value = configurationFileFormat.EnableMouse;
+            Hid.Hotkeys.Value = configurationFileFormat.Hotkeys;
+            Hid.InputConfig.Value = configurationFileFormat.InputConfig;
 
             if (Hid.InputConfig.Value == null)
             {
                 Hid.InputConfig.Value = new List<InputConfig>();
             }
-
+            Multiplayer.Mode.Value = configurationFileFormat.MultiplayerMode;
+            Multiplayer.DisableP2p.Value = configurationFileFormat.MultiplayerDisableP2p;
+            Multiplayer.Username.Value = configurationFileFormat.MultiplayerUsername;
+            Multiplayer.LdnPassphrase.Value = configurationFileFormat.MultiplayerLdnPassphrase;
+            Multiplayer.EnableLan.Value = configurationFileFormat.MultiplayerEnableLan;
+            Multiplayer.LanInterfaceId.Value = configurationFileFormat.MultiplayerLanInterfaceId;
             if (configurationFileUpdated)
             {
                 ToFileFormat().SaveConfig(configurationFilePath);

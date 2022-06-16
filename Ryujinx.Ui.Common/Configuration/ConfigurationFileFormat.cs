@@ -1,5 +1,6 @@
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Configuration.System;
@@ -80,7 +81,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Enables printing error log messages
         /// </summary>
         public bool LoggingEnableError { get; set; }
-        
+
         /// <summary>
         /// Enables printing trace log messages
         /// </summary>
@@ -160,6 +161,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Enables or disables Shader cache
         /// </summary>
         public bool EnableShaderCache { get; set; }
+        public bool EnableMulticoreScheduling { get; set; }
 
         /// <summary>
         /// Enables or disables profiled translation cache persistency
@@ -314,6 +316,18 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Loads a configuration file from disk
         /// </summary>
         /// <param name="path">The path to the JSON configuration file</param>
+
+        public MultiplayerMode MultiplayerMode { get; set; }
+
+        public bool MultiplayerDisableP2p { get; set; }
+
+        public string MultiplayerUsername { get; set; }
+
+        public string MultiplayerLdnPassphrase { get; set; }
+
+        public bool MultiplayerEnableLan { get; set; }
+
+        public string MultiplayerLanInterfaceId { get; set; }
         public static bool TryLoad(string path, out ConfigurationFileFormat configurationFileFormat)
         {
             try

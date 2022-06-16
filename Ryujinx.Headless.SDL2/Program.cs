@@ -484,6 +484,11 @@ namespace Ryujinx.Headless.SDL2
                                                                   options.MemoryManagerMode,
                                                                   (bool)options.IgnoreMissingServices,
                                                                   options.AspectRatio,
+                                                                  options.MultiplayerMode,
+                                                                  options.MultiplayerDisableP2p,
+                                                                  options.MultiplayerLdnPassphrase,
+                                                                  options.MultiplayerEnableLan,
+                                                                  options.MultiplayerLanInterfaceId,
                                                                   options.AudioVolume);
 
             return new Switch(configuration);

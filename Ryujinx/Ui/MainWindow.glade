@@ -202,6 +202,7 @@
                                 <property name="tooltip_text" translatable="yes">Enable or Disable Developer Column in the game list</property>
                                 <property name="label" translatable="yes">Enable Developer Column</property>
                                 <property name="use_underline">True</property>
+                                <signal name="toggled" handler="Developer_Toggled" swapped="no"/>
                               </object>
                             </child>
                             <child>
@@ -211,6 +212,16 @@
                                 <property name="tooltip_text" translatable="yes">Enable or Disable Version Column in the game list</property>
                                 <property name="label" translatable="yes">Enable Version Column</property>
                                 <property name="use_underline">True</property>
+                              </object>
+                            </child>
+							              <child>
+                              <object class="GtkCheckMenuItem" id="_ldnInfoToggle">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="tooltip_text" translatable="yes">Enable or Disable LDN Info Column in the game list</property>
+                                <property name="label" translatable="yes">Enable LDN Info Column</property>
+                                <property name="use_underline">True</property>
+                                <signal name="toggled" handler="LdnInfo_Toggled" swapped="no"/>
                               </object>
                             </child>
                             <child>
