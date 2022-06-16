@@ -177,8 +177,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _adapter.StartCapture();
 
             Thread.Sleep(_scanDwellTime);
-
-            LogMsg($"Returning Networks: {_scanResults.Count}");
+            if (_scanResults.Count > 0)
+                LogMsg($"Returning Networks: {_scanResults.Count}");
 
             return _scanResults.ToArray();
         }
