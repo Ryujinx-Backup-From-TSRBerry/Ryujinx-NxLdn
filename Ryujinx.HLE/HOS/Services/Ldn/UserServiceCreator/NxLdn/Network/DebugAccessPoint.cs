@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         protected override RadioPacket GetAdvertisementFrame()
         {
             byte[] nonce = BitConverter.GetBytes(_parent._random.Next(0x10000000));
-            RadioPacket radioPacket = base.GetAdvertisementFrame();
+            RadioPacket radioPacket = new RadioPacket();
 
             ActionFrame action = new ActionFrame(_macAddress, broadcastAddr, broadcastAddr);
             AdvertisementFrame advertisement = new AdvertisementFrame()

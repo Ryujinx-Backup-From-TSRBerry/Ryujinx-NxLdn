@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public void DisconnectNetwork()
         {
-            LogMsg("NxLdnClient DisconnectNetwork");
+            // LogMsg("NxLdnClient DisconnectNetwork");
 
             _adapterHandler.DisconnectNetwork();
         }
@@ -126,7 +126,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public NetworkInfo[] Scan(ushort channel, ScanFilter scanFilter)
         {
-            LogMsg("NxLdnClient Scan");
+            // LogMsg("NxLdnClient Scan");
 
             return _adapterHandler.Scan(channel);
         }
