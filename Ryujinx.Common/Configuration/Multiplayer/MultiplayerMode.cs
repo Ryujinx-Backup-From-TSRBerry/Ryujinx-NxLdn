@@ -3,6 +3,8 @@
     public enum MultiplayerMode
     {
         Disabled,
-        RyuLdn
+        RyuLdn,
+        Spacemeowx2Ldn,
+        NxLdn
     }
 }

@@ -57,11 +57,12 @@ namespace Ryujinx.Common.Utilities
         {
             JsonSerializerOptions options = new JsonSerializerOptions
             {
-                DictionaryKeyPolicy  = SnakeCase,
+                IncludeFields = true,
+                DictionaryKeyPolicy = SnakeCase,
                 PropertyNamingPolicy = SnakeCase,
-                WriteIndented        = prettyPrint,
-                AllowTrailingCommas  = true,
-                ReadCommentHandling  = JsonCommentHandling.Skip
+                WriteIndented = prettyPrint,
+                AllowTrailingCommas = true,
+                ReadCommentHandling = JsonCommentHandling.Skip
             };
 
             options.Converters.Add(new JsonStringEnumConverter());

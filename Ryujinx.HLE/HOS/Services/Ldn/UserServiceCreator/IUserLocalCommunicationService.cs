@@ -8,6 +8,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn.Types;
 using Ryujinx.Memory;
@@ -1086,6 +1087,20 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                                 catch (Exception)
                                 {
                                     Logger.Error?.Print(LogClass.ServiceLdn, "Could not locate RyuLdn server. Defaulting to stubbed wireless.");
+                                    NetworkClient = new DisabledLdnClient();
+                                }
+                                break;
+                            case MultiplayerMode.Spacemeowx2Ldn:
+                                //NetworkClient = new Spacemeowx2LdnClient(this, context.Device.Configuration);
+                                break;
+                            case MultiplayerMode.NxLdn:
+                                try
+                                {
+                                    NetworkClient = new NxLdnClient(this, context.Device.Configuration);
+                                }
+                                catch (Exception)
+                                {
+                                    Logger.Error?.Print(LogClass.ServiceLdn, "Could not create AdapterHandler. Defaulting to stubbed wireless.", "NxLdnClient");
                                     NetworkClient = new DisabledLdnClient();
                                 }
                                 break;
