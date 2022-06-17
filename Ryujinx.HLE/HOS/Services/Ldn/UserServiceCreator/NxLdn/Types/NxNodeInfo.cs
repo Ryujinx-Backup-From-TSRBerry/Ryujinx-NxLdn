@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 56)]
-    public struct NxNodeInfo
+    internal struct NxNodeInfo
     {
         public uint Ipv4Address;
 
