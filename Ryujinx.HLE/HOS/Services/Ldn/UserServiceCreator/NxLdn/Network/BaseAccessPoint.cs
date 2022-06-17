@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         }
 
-        public virtual void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData)
+        public virtual void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength)
         {
             Array33<byte> sessionId = new();
             _parent._random.NextBytes(sessionId.AsSpan()[..16]);
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 },
                 Ldn = {
                     AdvertiseData = advertiseData,
-                    AdvertiseDataSize = (ushort) advertiseData.Length,
+                    AdvertiseDataSize = advertiseDataLength,
                     AuthenticationId = (ulong) _parent._random.NextInt64(),
                     NodeCount = 1,
                     NodeCountMax = request.NetworkConfig.NodeCountMax,
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 Ipv4Address = NetworkHelpers.ConvertIpv4Address(IPAddress.Parse($"169.254.{networkId}.1")),
                 IsConnected = 1,
                 LocalCommunicationVersion = request.NetworkConfig.LocalCommunicationVersion,
-                NodeId = 1,
+                NodeId = 0,
                 Reserved2 = new Array16<byte>(),
                 UserName = request.UserConfig.UserName
             };
