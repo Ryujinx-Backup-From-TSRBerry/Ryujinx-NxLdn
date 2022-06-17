@@ -94,10 +94,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _adapter.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
         }
 
-        public override bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, out NetworkInfo networkInfo)
+        public override bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength, out NetworkInfo networkInfo)
         {
             _ap = new Network.AccessPoint(this);
-            _ap.BuildNewNetworkInfo(request, advertiseData);
+            _ap.BuildNewNetworkInfo(request, advertiseData, advertiseDataLength);
             SetAdapterChannel(_networkInfo.Common.Channel);
             networkInfo = _networkInfo;
             return _ap.Start();

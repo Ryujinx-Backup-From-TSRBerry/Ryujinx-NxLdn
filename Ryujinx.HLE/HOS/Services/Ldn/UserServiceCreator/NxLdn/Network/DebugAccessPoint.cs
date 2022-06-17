@@ -14,13 +14,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         private DebugAdapterHandler _parent;
         private PhysicalAddress _macAddress;
 
-        public override void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData)
+        public override void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength)
         {
-            base.BuildNewNetworkInfo(request, advertiseData);
-            byte[] sessionId = new byte[16];
-            _parent._random.NextBytes(sessionId);
-            Array.Resize(ref sessionId, 33);
-            int networkId = _parent._random.Next(1, 128);
+            base.BuildNewNetworkInfo(request, advertiseData, advertiseDataLength);
             _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
             _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
             LogMsg("AP: New NetworkInfo created.");

@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             Array384<byte> adData = new();
             advertiseData.CopyTo(adData.AsSpan());
 
-            if (_adapterHandler.CreateNetwork(request, adData, out NetworkInfo networkInfo))
+            if (_adapterHandler.CreateNetwork(request, adData, (ushort)advertiseData.Length, out NetworkInfo networkInfo))
             {
                 NetworkChange.Invoke(this, new NetworkChangeEventArgs(networkInfo, true));
                 return true;

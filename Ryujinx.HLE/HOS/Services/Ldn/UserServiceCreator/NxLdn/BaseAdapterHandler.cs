@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             // LogMsg($"Built NetworkInfo: ", networkInfo);
             // TODO: Remove debug stuff
-            string username = System.Text.Encoding.UTF8.GetString(networkInfo.Ldn.Nodes[0].UserName);
+            string username = System.Text.Encoding.UTF8.GetString(networkInfo.Ldn.Nodes[0].UserName.AsSpan());
             LogMsg($"Node 0 - Username: {username}");
 
             // https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)Swap_endianness('Raw',8,true)To_Hex('None',0)
@@ -181,7 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _scanResults = new List<NetworkInfo>();
         }
 
-        public abstract bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, out NetworkInfo networkInfo);
+        public abstract bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength, out NetworkInfo networkInfo);
 
         public virtual void SetGameVersion(byte[] versionString)
         {
