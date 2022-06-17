@@ -5,8 +5,8 @@ import json
 import base64
 
 cap_data = rdpcap("debug-cap.pcap")
-switch_pkts = cap_data.filter(lambda x: len(x) > 1000 and x.layers()[
-                              1] == scapy.layers.dot11.Dot11FCS and x.SC == 127)
+switch_pkts = cap_data.filter(lambda x: len(x) > 1000 and (x.layers()[
+                              1] == scapy.layers.dot11.Dot11FCS or x.layers()[1] == scapy.layers.dot11.Dot11) and (x.SC == 127 or x.subtype == 13))
 
 
 class LdnEncoder(json.JSONEncoder):
@@ -37,7 +37,10 @@ num = 0
 for pkt in switch_pkts:
     print(f"Working on packet: {num}")
     frame = ldn.AdvertisementFrame()
-    frame.decode(raw(pkt)[53:-4])
+    if raw(pkt)[53:-4][0] == 0x7f:
+        frame.decode(raw(pkt)[53:-4])
+    else:
+        frame.decode(raw(pkt)[32:-4])
     print("\n------\n")
     print(json.dumps(frame, indent=2, cls=LdnEncoder))
     print("<----\n")
