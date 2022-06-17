@@ -12,7 +12,7 @@ switch_pkts = cap_data.filter(lambda x: len(x) > 1000 and x.layers()[
 class LdnEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, ldn.AdvertisementFrame):
-            ad_dict = obj.__dict__
+            ad_dict = obj.__dict__.copy()
             ad_dict["header"] = ad_dict["header"].__dict__
             ad_dict["info"] = ad_dict["info"].__dict__
             ad_dict["header"]["ssid"] = base64.b64encode(
@@ -41,4 +41,19 @@ for pkt in switch_pkts:
     print("\n------\n")
     print(json.dumps(frame, indent=2, cls=LdnEncoder))
     print("<----\n")
+
+    # info = ldn.NetworkInfo()
+    # info.address = pkt.addr2
+    # info.channel = 1
+    # info.parse(frame)
+    # param = ldn.ConnectNetworkParam()
+    # param.network = info
+    # param.password = "testme"
+    # param.name = "testnick"
+    # param.app_version = 6
+    # print("Trying to connect...")
+    # with ldn.connect(param) as network:
+    #     print(network)
+
+    # input("Press enter to continue")
     num += 1
