@@ -5,7 +5,9 @@ using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using System;
@@ -193,42 +195,40 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
-        // public NetworkError Connect(ConnectRequest request)
-        // {
-        //     byte[] authKey = new byte[0x10];
-        //     _random.NextBytes(authKey);
-        //     AuthenticationRequest authRequest = new AuthenticationRequest()
-        //     {
-        //         UserName = request.UserConfig.UserName,
-        //         AppVersion = BitConverter.ToUInt16(_gameVersion)
-        //     };
-        //     ChallengeRequestParameter challenge = new ChallengeRequest()
-        //     {
-        //         Token = request.NetworkInfo.Ldn.AuthenticationId,
-        //         Nonce = (ulong)_random.NextInt64(0x100000000), // FIXME: This should probably be done in another way
-        //         DeviceId = (ulong)_random.NextInt64(0x100000000) // FIXME: This should probably be done in another way
-        //     }.Encode();
-        //     // TODO: Figure out if this is the right packet type
-        //     DataDataFrame data = new DataDataFrame()
-        //     {
-        //         SourceAddress = _adapter.MacAddress,
-        //         DestinationAddress = new PhysicalAddress(request.NetworkInfo.Common.MacAddress),
-        //         PayloadData = new AuthenticationFrame()
-        //         {
-        //             Version = 3, // FIXME: usually this will be 3 (with encryption), but there needs to be a way to check this
-        //             StatusCode = AuthenticationStatusCode.Success,
-        //             IsResponse = false,
-        //             Header = request.NetworkInfo.NetworkId,
-        //             NetworkKey = request.NetworkInfo.NetworkId.SessionId,
-        //             AuthenticationKey = authKey, // FIXME: Secure RNG?
-        //             Size = 64 + 0x300 + 0x24,
-        //             Payload = authRequest,
-        //             ChallengeRequest = challenge
-        //         }.Encode(),
-        //     };
-        //     _adapter.SendPacket(data);
-        //     return NetworkError.None;
-        // }
+        protected NxAuthenticationFrame BuildAuthenticationRequest(ConnectRequest request)
+        {
+            byte[] authKey = new byte[0x10];
+            _random.NextBytes(authKey);
+            AuthenticationRequest authRequest = new AuthenticationRequest()
+            {
+                AppVersion = BitConverter.ToUInt16(_gameVersion)
+            };
+            request.UserConfig.UserName.AsSpan().CopyTo(authRequest.UserName.AsSpan());
+
+            ChallengeRequestParameter challenge = new ChallengeRequest()
+            {
+                Token = request.NetworkInfo.Ldn.AuthenticationId,
+                Nonce = (ulong)_random.NextInt64(0x100000000), // FIXME: This should probably be done in another way
+                DeviceId = (ulong)_random.NextInt64(0x100000000) // FIXME: This should probably be done in another way
+            }.Encode();
+            NxAuthenticationFrame authFrame = new NxAuthenticationFrame()
+            {
+                Version = 3, // FIXME: usually this will be 3 (with encryption), but there needs to be a way to check this
+                StatusCode = AuthenticationStatusCode.Success,
+                IsResponse = false,
+                Header = request.NetworkInfo.NetworkId,
+                AuthenticationKey = authKey, // FIXME: Secure RNG?
+                Size = 64 + 0x300 + 0x24,
+                Payload = authRequest,
+                ChallengeRequest = challenge
+            };
+
+            request.NetworkInfo.NetworkId.SessionId.AsSpan().CopyTo(authFrame.NetworkKey);
+
+            return authFrame;
+        }
+
+        public abstract NetworkError Connect(ConnectRequest request);
 
         public abstract NetworkInfo[] Scan(ushort channel);
 

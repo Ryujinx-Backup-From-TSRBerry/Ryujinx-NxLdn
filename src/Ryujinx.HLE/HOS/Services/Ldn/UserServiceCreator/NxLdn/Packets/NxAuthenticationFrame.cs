@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 {
     // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L453
     // Length: 78 + ? (depends on size)
-    internal sealed class AuthenticationFrame
+    internal sealed class NxAuthenticationFrame
     {
         // For PacketDotNet.Packet implementations this would usually be called Header
         private ByteArraySegment PacketHeader;
@@ -33,32 +33,32 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public byte Version
         {
-            get => PacketHeader.Skip(AuthenticationFields.VersionPosition).First();
-            set => PacketHeader.Bytes[PacketHeader.Offset + AuthenticationFields.VersionPosition] = value;
+            get => PacketHeader.Skip(NxAuthenticationFields.VersionPosition).First();
+            set => PacketHeader.Bytes[PacketHeader.Offset + NxAuthenticationFields.VersionPosition] = value;
         }
 
         private byte SizeLow
         {
-            get => PacketHeader.Skip(AuthenticationFields.SizeLowPosition).First();
-            set => PacketHeader.Bytes[PacketHeader.Offset + AuthenticationFields.SizeLowPosition] = value;
+            get => PacketHeader.Skip(NxAuthenticationFields.SizeLowPosition).First();
+            set => PacketHeader.Bytes[PacketHeader.Offset + NxAuthenticationFields.SizeLowPosition] = value;
         }
 
         public AuthenticationStatusCode StatusCode
         {
-            get => (AuthenticationStatusCode)PacketHeader.Skip(AuthenticationFields.StatusCodePosition).First();
-            set => PacketHeader.Bytes[PacketHeader.Offset + AuthenticationFields.StatusCodePosition] = (byte)value;
+            get => (AuthenticationStatusCode)PacketHeader.Skip(NxAuthenticationFields.StatusCodePosition).First();
+            set => PacketHeader.Bytes[PacketHeader.Offset + NxAuthenticationFields.StatusCodePosition] = (byte)value;
         }
 
         public bool IsResponse
         {
-            get => EndianBitConverter.Big.ToBoolean(PacketHeader.Bytes, AuthenticationFields.IsResponsePosition);
-            set => EndianBitConverter.Big.CopyBytes(value, PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.IsResponsePosition);
+            get => EndianBitConverter.Big.ToBoolean(PacketHeader.Bytes, NxAuthenticationFields.IsResponsePosition);
+            set => EndianBitConverter.Big.CopyBytes(value, PacketHeader.Bytes, PacketHeader.Offset + NxAuthenticationFields.IsResponsePosition);
         }
 
         private byte SizeHigh
         {
-            get => PacketHeader.Skip(AuthenticationFields.SizeHighPosition).First();
-            set => PacketHeader.Bytes[PacketHeader.Offset + AuthenticationFields.SizeHighPosition] = value;
+            get => PacketHeader.Skip(NxAuthenticationFields.SizeHighPosition).First();
+            set => PacketHeader.Bytes[PacketHeader.Offset + NxAuthenticationFields.SizeHighPosition] = value;
         }
 
         // This time the result should be in little endian
@@ -66,21 +66,21 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         public NetworkId Header
         {
             get => LdnHelper.FromBytes<NetworkId>(
-                    PacketHeader.Skip(AuthenticationFields.SessionInfoPosition).Take(AuthenticationFields.SessionInfoLength).ToArray()
+                    PacketHeader.Skip(NxAuthenticationFields.SessionInfoPosition).Take(NxAuthenticationFields.SessionInfoLength).ToArray()
                 );
-            set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.SessionInfoPosition);
+            set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + NxAuthenticationFields.SessionInfoPosition);
         }
 
         public byte[] NetworkKey
         {
-            get => PacketHeader.Skip(AuthenticationFields.NetworkKeyPosition).Take(AuthenticationFields.NetworkKeyLength).ToArray();
-            set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.NetworkKeyPosition);
+            get => PacketHeader.Skip(NxAuthenticationFields.NetworkKeyPosition).Take(NxAuthenticationFields.NetworkKeyLength).ToArray();
+            set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + NxAuthenticationFields.NetworkKeyPosition);
         }
 
         public byte[] AuthenticationKey
         {
-            get => PacketHeader.Skip(AuthenticationFields.AuthenticationKeyPosition).Take(AuthenticationFields.AuthenticationKeyLength).ToArray();
-            set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.AuthenticationKeyLength);
+            get => PacketHeader.Skip(NxAuthenticationFields.AuthenticationKeyPosition).Take(NxAuthenticationFields.AuthenticationKeyLength).ToArray();
+            set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + NxAuthenticationFields.AuthenticationKeyLength);
         }
 
         public ushort Size
@@ -96,8 +96,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         private byte[] _payload
         {
-            get => PacketHeader.Skip(AuthenticationFields.PayloadPosition).Take(Size).ToArray();
-            set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AuthenticationFields.PayloadPosition);
+            get => PacketHeader.Skip(NxAuthenticationFields.PayloadPosition).Take(Size).ToArray();
+            set => value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + NxAuthenticationFields.PayloadPosition);
         }
 
         public AuthenticationPayload Payload
@@ -139,7 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 {
                     if (Version >= 3)
                     {
-                        return LdnHelper.FromBytes<ChallengeRequestParameter>(_payload.Skip(AuthenticationFields.PayloadRequestChallengePosition).Take(AuthenticationFields.PayloadRequestChallengeLength).ToArray());
+                        return LdnHelper.FromBytes<ChallengeRequestParameter>(_payload.Skip(NxAuthenticationFields.PayloadRequestChallengePosition).Take(NxAuthenticationFields.PayloadRequestChallengeLength).ToArray());
                     }
                     return default;
                 }
@@ -151,7 +151,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 // TODO: Adjust exception type + message
                 if (IsResponse)
                     throw new System.Exception("IsResponse == true");
-                LdnHelper.StructureToByteArray(value).CopyTo(_payload, AuthenticationFields.PayloadRequestChallengePosition);
+                LdnHelper.StructureToByteArray(value).CopyTo(_payload, NxAuthenticationFields.PayloadRequestChallengePosition);
             }
         }
 
@@ -160,21 +160,21 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             return PacketHeader.ActualBytes();
         }
 
-        public AuthenticationFrame()
+        public NxAuthenticationFrame()
         {
             PacketHeader = new ByteArraySegment(new byte[78 + 0]);
         }
 
-        private AuthenticationFrame(ByteArraySegment byteArraySegment)
+        private NxAuthenticationFrame(ByteArraySegment byteArraySegment)
         {
             PacketHeader = byteArraySegment;
         }
 
-        public static bool TryGetAuthenticationFrame(DataFrame data, out AuthenticationFrame authFrame)
+        public static bool TryGetNxAuthenticationFrame(DataFrame data, out NxAuthenticationFrame authFrame)
         {
             if (data.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Authentication)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Authentication)))
             {
-                authFrame = new AuthenticationFrame(data.PayloadDataSegment);
+                authFrame = new NxAuthenticationFrame(data.PayloadDataSegment);
                 return true;
             }
             authFrame = null;
