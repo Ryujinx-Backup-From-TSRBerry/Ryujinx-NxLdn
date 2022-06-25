@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 {
-    internal readonly struct AuthenticationFields
+    internal readonly struct NxAuthenticationFields
     {
         public static readonly int LdnHeaderLength = Marshal.SizeOf<DataFrameHeader>();
         public static readonly int VersionPosition = LdnHeaderLength;

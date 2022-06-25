@@ -66,8 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient Connect");
 
-            // return _adapterHandler.Connect(request);
-            return NetworkError.None;
+            return _adapterHandler.Connect(request);
         }
 
         public NetworkError ConnectPrivate(ConnectPrivateRequest request)
