@@ -24,15 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             _adapter.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
 
-            try
-            {
-                _adapter.Open();
-            }
-            catch (Exception ex)
-            {
-                LogMsg($"DebugAdapterHandler: Exception: {ex}");
-                throw ex;
-            }
+            _adapter.Open();
 
             if (_storeCapture)
             {
