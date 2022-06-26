@@ -39,7 +39,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             LogMsg($"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
+            action.UpdateFrameCheckSequence();
             radioPacket.PayloadPacket = action;
+            radioPacket.UpdateCalculatedValues();
 
             return radioPacket;
         }

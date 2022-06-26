@@ -24,7 +24,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         public static readonly int AuthenticationKeyPosition = NetworkKeyPosition + NetworkKeyLength;
         public static readonly int AuthenticationKeyLength = 0x10;
         public static readonly int PayloadPosition = AuthenticationKeyPosition + AuthenticationKeyLength;
-        public static readonly int PayloadRequestChallengePosition = Marshal.SizeOf<AuthenticationRequest>() + 0x24;
-        public static readonly int PayloadRequestChallengeLength = 0x300;
+        public static readonly int PayloadRequestChallengePadding = 0x24;
+        public static readonly int PayloadRequestChallengePosition = Marshal.SizeOf<AuthenticationRequest>() + PayloadRequestChallengePadding;
+        public static readonly int PayloadRequestChallengeLength = Marshal.SizeOf<ChallengeRequestParameter>();
     }
 }

@@ -104,12 +104,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public override NetworkError Connect(ConnectRequest request)
         {
+            RadioPacket radioPacket = new RadioPacket();
             NxAuthenticationFrame authRequest = base.BuildAuthenticationRequest(request);
             PhysicalAddress destAddr = new PhysicalAddress(request.NetworkInfo.Common.MacAddress.AsSpan().ToArray());
+            // 512
             InformationElementList infoElementList = new InformationElementList();
             AuthenticationFrame authFrame = new AuthenticationFrame(_adapter.MacAddress, destAddr, destAddr, infoElementList);
             authFrame.PayloadData = authRequest.Encode();
-            _adapter.SendPacket(authFrame);
+            radioPacket.PayloadPacket = authFrame;
+            _adapter.SendPacket(radioPacket);
+            // TODO: Add AuthenticationResponse handling
+            Thread.Sleep(5000);
             return NetworkError.None;
         }
 

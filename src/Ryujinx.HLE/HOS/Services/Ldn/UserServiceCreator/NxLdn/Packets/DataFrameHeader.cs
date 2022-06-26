@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 {
-    [StructLayout(LayoutKind.Sequential, Size = 6)]
+    [StructLayout(LayoutKind.Sequential, Size = 6, Pack = 1)]
     internal struct DataFrameHeader
     {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]

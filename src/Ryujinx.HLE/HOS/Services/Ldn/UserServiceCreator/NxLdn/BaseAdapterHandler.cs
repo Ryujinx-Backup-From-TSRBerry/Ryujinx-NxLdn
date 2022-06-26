@@ -218,7 +218,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 IsResponse = false,
                 Header = request.NetworkInfo.NetworkId,
                 AuthenticationKey = authKey, // FIXME: Secure RNG?
-                Size = 64 + 0x300 + 0x24,
+                Size = (ushort)(Marshal.SizeOf(authRequest) + NxAuthenticationFields.PayloadRequestChallengePadding + Marshal.SizeOf(challenge)),
                 Payload = authRequest,
                 ChallengeRequest = challenge
             };
