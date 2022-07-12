@@ -8,6 +8,7 @@ using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Common.SystemInterop;
+using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.Ui.Common;
@@ -35,6 +36,11 @@ namespace Ryujinx.Ava
 
         public static void Main(string[] args)
         {
+            if (OperatingSystem.IsLinux() && !Capabilities.InheritCapabilities())
+            {
+                // System.Environment.Exit(1);
+            }
+
             Version = ReleaseInformation.GetVersion();
 
             if (OperatingSystem.IsWindows() && !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17134))
