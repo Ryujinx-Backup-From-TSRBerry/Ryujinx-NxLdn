@@ -47,23 +47,48 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
-        // NOTE: This should be part of: https://github.com/dotpcap/packetnet/blob/c4ba374674eeb1e7a7fd58ebcfe0b933505599f2/PacketDotNet/Ieee80211/RadioTapFields.cs
-        // Maybe I should PR this?
-        // public static ushort ChannelToFrequencyMHz(ushort channel)
-        // {
-        //     // NOTE: These will only include the channels the switch will use
-        //     switch (channel)
-        //     {
-        //         case 1:
-        //             return 2412;
-        //         case 6:
-        //             return 2437;
-        //         case 11:
-        //             return 2462;
-        //         default:
-        //             return 0;
-        //     }
-        // }
+        protected static NetworkInfo GetEmptyNetworkInfo()
+        {
+            NetworkInfo networkInfo = new NetworkInfo
+            {
+                NetworkId = {
+                    IntentId = default,
+                    SessionId = new Array16<byte>()
+                },
+                Common = {
+                    MacAddress = new Array6<byte>(),
+                    Ssid = {
+                        Length = 0,
+                        Name = new Array33<byte>()
+                    }
+                },
+                Ldn = {
+                    NodeCountMax = 8,
+                    SecurityParameter = new Array16<byte>(),
+                    Nodes = new Array8<NodeInfo>(),
+                    AdvertiseData = new Array384<byte>(),
+                    Unknown2 = new Array140<byte>()
+                }
+            };
+            networkInfo.Common.Ssid.Name.AsSpan().Fill(0);
+            networkInfo.NetworkId.SessionId.AsSpan().Fill(0);
+            networkInfo.Ldn.SecurityParameter.AsSpan().Fill(0);
+            for (int i = 0; i < 8; i++)
+            {
+                networkInfo.Ldn.Nodes[i] = new NodeInfo()
+                {
+                    MacAddress = new Array6<byte>(),
+                    UserName = new Array33<byte>(),
+                    Reserved2 = new Array16<byte>()
+                };
+                networkInfo.Ldn.Nodes[i].UserName.AsSpan().Fill(0);
+                networkInfo.Ldn.Nodes[i].Reserved2.AsSpan().Fill(0);
+            }
+            networkInfo.Ldn.AdvertiseData.AsSpan().Fill(0);
+            networkInfo.Ldn.Unknown2.AsSpan().Fill(0);
+
+            return networkInfo;
+        }
 
         protected static bool BuildNetworkInfo(ushort channel, ActionFrame action, AdvertisementFrame advertisement, out NetworkInfo networkInfo)
         {
@@ -71,21 +96,15 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             advertisement.Header.SessionId.AsSpan().CopyTo(sessionId.AsSpan());
 
             LogMsg($"Header length: {Marshal.SizeOf(advertisement.Header)} / {Marshal.SizeOf<NetworkId>()} | Info length: {Marshal.SizeOf(advertisement.Info)} / {Marshal.SizeOf<LdnNetworkInfo>()}");
-            networkInfo = new NetworkInfo()
-            {
-                NetworkId = advertisement.Header,
-                Common = {
-                    Ssid = {
-                        Length = (byte)advertisement.Header.SessionId.Length,
-                        Name = sessionId
-                    },
-                    Channel = channel,
-                    LinkLevel = 3,
-                    NetworkType = 2,
-                    Reserved = (uint) 0
-                },
-                Ldn = advertisement.Info
-            };
+            networkInfo = GetEmptyNetworkInfo();
+            networkInfo.NetworkId = advertisement.Header;
+            networkInfo.Common.Ssid.Length = (byte)advertisement.Header.SessionId.Length;
+            networkInfo.Common.Ssid.Name = sessionId;
+            networkInfo.Common.Channel = channel;
+            networkInfo.Common.LinkLevel = 3;
+            networkInfo.Common.NetworkType = 2;
+            networkInfo.Common.Reserved = 0;
+            networkInfo.Ldn = advertisement.Info.ToLdnNetworkInfo();
 
             action.SourceAddress.GetAddressBytes().CopyTo(networkInfo.Common.MacAddress.AsSpan());
 
@@ -124,13 +143,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L710
             // RadioPacket HasPayloadPacket -> ActionFrame
-            if (packet.HasPayloadPacket && packet.PayloadPacket is ActionFrame)
+            if (packet.HasPayloadPacket)
             {
                 if (_storeCapture)
                 {
                     _captureFileWriterDevice.Write(rawPacket);
                     // LogMsg($"OnScanPacketArrival: Raw packet dumped to file.");
                 }
+
                 // LogMsg($"OnScanPacketArrival: Got Packet: {packet.ToString(StringOutputType.VerboseColored)}");
                 LogMsg($"OnScanPacketArrival: RadioPacket: Header length: {packet.HeaderData.Length} / Payload length: {packet.PayloadPacket.TotalPacketLength}");
                 // LogMsg($"OnScanPacketArrival: RadioPacket: {string.Join(" ", packet.PayloadPacket.HeaderData.Select(x => x.ToString("X2")))}");
@@ -141,31 +161,43 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 // This does not work - I have no idea why
                 // {packet.PayloadPacket.ToString(StringOutputType.VerboseColored)}
 
-                // ActionFrame action = (ActionFrame) packet.PayloadPacket;
-                ActionFrame action = packet.Extract<ActionFrame>();
-                LogMsg($"OnScanPacketArrival: Got RadioPacket from: {action.SourceAddress.ToString()}");
-                // ActionFrame HasPayloadData -> Action(?)
-                // LogMsg($"OnScanPacketArrival: Action Frame: [{action.TotalPacketLength}] {action.ToString(StringOutputType.VerboseColored)}");
-                // LogMsg($"Action Payload: {action.HasPayloadPacket} / Action Data: {action.HasPayloadData}");
-                // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L719
-                if (AdvertisementFrame.TryGetAdvertisementFrame(action, out AdvertisementFrame adFrame))
+                switch (packet.PayloadPacket)
                 {
-                    LogMsg($"ActionPayloadData matches LDN header!");
-                    // LogMsg("AdvertisementFrame: ", adFrame);
-
-                    if (BuildNetworkInfo(currentChannel, action, adFrame, out NetworkInfo networkInfo))
-                    {
-                        LogMsg("Got networkInfo: ", networkInfo);
-                        if (!_scanResults.Contains(networkInfo))
+                    case ActionFrame:
+                        ActionFrame action = packet.Extract<ActionFrame>();
+                        LogMsg($"OnScanPacketArrival: Got RadioPacket from: {action.SourceAddress.ToString()}");
+                        // ActionFrame HasPayloadData -> Action(?)
+                        // LogMsg($"OnScanPacketArrival: Action Frame: [{action.TotalPacketLength}] {action.ToString(StringOutputType.VerboseColored)}");
+                        // LogMsg($"Action Payload: {action.HasPayloadPacket} / Action Data: {action.HasPayloadData}");
+                        // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L719
+                        if (AdvertisementFrame.TryGetAdvertisementFrame(action, out AdvertisementFrame adFrame))
                         {
-                            _scanResults.Add(networkInfo);
-                            LogMsg("Added NetworkInfo to scanResults.");
+                            LogMsg($"ActionPayloadData matches LDN header!");
+                            // LogMsg("AdvertisementFrame: ", adFrame);
+
+                            if (BuildNetworkInfo(currentChannel, action, adFrame, out NetworkInfo networkInfo))
+                            {
+                                LogMsg("Got networkInfo: ", networkInfo);
+                                if (!_scanResults.Contains(networkInfo))
+                                {
+                                    _scanResults.Add(networkInfo);
+                                    LogMsg("Added NetworkInfo to scanResults.");
+                                }
+                            }
+                            else
+                            {
+                                LogMsg("Invalid NetworkInfo packet skipped.");
+                            }
                         }
-                    }
-                    else
-                    {
-                        LogMsg("Invalid NetworkInfo packet skipped.");
-                    }
+                        break;
+                    case AuthenticationFrame:
+                        AuthenticationFrame authFrame = packet.Extract<AuthenticationFrame>();
+                        if (NxAuthenticationFrame.TryGetNxAuthenticationFrame(authFrame, out NxAuthenticationFrame nxAuthFrame))
+                        {
+                            LogMsg("OnPacketArrival: Authentication packet header matches!");
+                            LogMsg("OnPacketArrival: AuthenticationFrame: ", nxAuthFrame);
+                        }
+                        break;
                 }
             }
         }
@@ -180,10 +212,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _storeCapture = storeCapture;
             _debugMode = debugMode;
 
+            // FIXME: Temp workaround
+            _networkInfo = GetEmptyNetworkInfo();
             _scanResults = new List<NetworkInfo>();
         }
 
-        public abstract bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength, out NetworkInfo networkInfo);
+        public abstract bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo);
 
         public virtual void SetGameVersion(byte[] versionString)
         {
@@ -232,10 +266,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public abstract NetworkInfo[] Scan(ushort channel);
 
-        public void SetAdvertiseData(byte[] data)
+        public bool SetAdvertiseData(byte[] data, out NetworkInfo networkInfo)
         {
             data.CopyTo(_networkInfo.Ldn.AdvertiseData.AsSpan());
             _networkInfo.Ldn.AdvertiseDataSize = (ushort)data.Length;
+
+            networkInfo = _networkInfo;
+
+            return _networkInfo.Ldn.Nodes[0].IsConnected == 1;
         }
 
         public abstract void DisconnectAndStop();

@@ -1,6 +1,7 @@
 using PacketDotNet.Ieee80211;
 using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using System;
@@ -12,9 +13,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
     {
         private AdapterHandler _parent;
 
-        public override void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength)
+        public override void BuildNewNetworkInfo(CreateAccessPointRequest request)
         {
-            base.BuildNewNetworkInfo(request, advertiseData, advertiseDataLength);
+            base.BuildNewNetworkInfo(request);
             _parent._adapter.MacAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
             _parent._adapter.MacAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
             LogMsg("AP: New NetworkInfo created.");
@@ -30,12 +31,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             {
                 Header = _parent._networkInfo.NetworkId,
                 Encryption = 2, // can be 1(plain) or 2(AES-CTR) -> https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-payload
-                Info = _parent._networkInfo.Ldn,
+                Info = NxLdnNetworkInfo.FromLdnNetworkInfo(_parent._networkInfo.Ldn),
                 Nonce = nonce,
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
             advertisement.WriteHash();
-            LogMsg("AP: Created AdvertisementFrame: ", advertisement);
+            // LogMsg("AP: Created AdvertisementFrame: ", advertisement);
             LogMsg($"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
@@ -49,12 +50,16 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         protected override void SpamActionFrame()
         {
             RadioPacket radioPacket = GetAdvertisementFrame();
+            InformationElementList infoList = new InformationElementList();
+            infoList.Add(new InformationElement(InformationElement.ElementId.ServiceSetIdentity, new byte[] { }));
+            BeaconFrame beaconFrame = new BeaconFrame(_parent._adapter.MacAddress, _parent._adapter.MacAddress, infoList);
             while (_parent._adapter.Opened)
             {
                 _parent._adapter.SendPacket(radioPacket);
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
                     // LogMsg($"AP: Writing packet to file...");
+                    _parent._captureFileWriterDevice.SendPacket(beaconFrame);
                     _parent._captureFileWriterDevice.SendPacket(radioPacket);
                 }
                 // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#overview

@@ -36,58 +36,43 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         protected virtual void OnPacketArrival(object s, PacketCapture e)
         {
-
         }
 
-        public virtual void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength)
+        public virtual void BuildNewNetworkInfo(CreateAccessPointRequest request)
         {
             Array33<byte> sessionId = new();
+            Array33<byte> ssid = new();
             _parent._random.NextBytes(sessionId.AsSpan()[..16]);
+            _parent._random.NextBytes(ssid.AsSpan()[..32]);
             int networkId = _parent._random.Next(1, 128);
-            _parent._networkInfo = new NetworkInfo()
+
+            _parent._networkInfo.NetworkId = new NetworkId
             {
-                NetworkId = {
-                    IntentId = request.NetworkConfig.IntentId
-                },
-                Common = {
-                    Ssid = {
-                        Length = (byte) 16,
-                        Name = sessionId
-                    },
-                    Channel = request.NetworkConfig.Channel == 0 ? (ushort) 1 : request.NetworkConfig.Channel,
-                    LinkLevel = 3,
-                    NetworkType = 2,
-                    Reserved = (uint) 0
-                },
-                Ldn = {
-                    AdvertiseData = advertiseData,
-                    AdvertiseDataSize = advertiseDataLength,
-                    AuthenticationId = (ulong) _parent._random.NextInt64(),
-                    NodeCount = 1,
-                    NodeCountMax = request.NetworkConfig.NodeCountMax,
-                    Nodes = new Array8<NodeInfo>(),
-                    Reserved1 = 0,
-                    Reserved2 = 0,
-                    SecurityMode = ((ushort)request.SecurityConfig.SecurityMode),
-                    StationAcceptPolicy = 0,
-                    Unknown1 = 0,
-                    Unknown2 = new Array140<byte>(),
-                }
+                IntentId = request.NetworkConfig.IntentId
             };
 
             sessionId.AsSpan()[..16].CopyTo(_parent._networkInfo.NetworkId.SessionId.AsSpan());
-            _parent._networkInfo.Ldn.Nodes[0] = new NodeInfo()
-            {
-                Reserved1 = 0,
-                Ipv4Address = NetworkHelpers.ConvertIpv4Address(IPAddress.Parse($"169.254.{networkId}.1")),
-                IsConnected = 1,
-                LocalCommunicationVersion = request.NetworkConfig.LocalCommunicationVersion,
-                NodeId = 0,
-                Reserved2 = new Array16<byte>(),
-                UserName = request.UserConfig.UserName
-            };
+
+            _parent._networkInfo.Common.Ssid.Length = (byte)32;
+            _parent._networkInfo.Common.Ssid.Name = ssid;
+            _parent._networkInfo.Common.Channel = request.NetworkConfig.Channel == 0 ? (ushort)1 : request.NetworkConfig.Channel;
+            _parent._networkInfo.Common.LinkLevel = 3;
+            _parent._networkInfo.Common.NetworkType = 2;
+            // _parent._networkInfo.Ldn.AuthenticationId = (ulong)_parent._random.NextInt64();
+            _parent._networkInfo.Ldn.NodeCount = 1;
+            _parent._networkInfo.Ldn.NodeCountMax = request.NetworkConfig.NodeCountMax;
+            _parent._networkInfo.Ldn.Nodes[0].Ipv4Address = NetworkHelpers.ConvertIpv4Address(IPAddress.Parse($"169.254.{networkId}.1"));
+            _parent._networkInfo.Ldn.Nodes[0].IsConnected = 1;
+            _parent._networkInfo.Ldn.Nodes[0].LocalCommunicationVersion = request.NetworkConfig.LocalCommunicationVersion;
+            _parent._networkInfo.Ldn.Nodes[0].UserName = request.UserConfig.UserName;
+            _parent._networkInfo.Ldn.SecurityMode = ((ushort)request.SecurityConfig.SecurityMode);
 
             request.SecurityConfig.Passphrase.AsSpan()[..16].CopyTo(_parent._networkInfo.Ldn.SecurityParameter.AsSpan());
+
+            for (byte i = 0; i < _parent._networkInfo.Ldn.Nodes.Length; i++)
+            {
+                _parent._networkInfo.Ldn.Nodes[i].NodeId = i;
+            }
         }
 
         protected abstract RadioPacket GetAdvertisementFrame();

@@ -242,7 +242,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             }
         }
 
-        public LdnNetworkInfo Info
+        public NxLdnNetworkInfo Info
         {
             get
             {
@@ -254,8 +254,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                     ldnInfo.Nodes[i].LocalCommunicationVersion = BinaryPrimitives.ReverseEndianness(ldnInfo.Nodes[i].LocalCommunicationVersion);
                 }
                 ldnInfo.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(ldnInfo.AdvertiseDataSize);
-                ldnInfo.AuthenticationId = BinaryPrimitives.ReverseEndianness(ldnInfo.AuthenticationId);
-                return ldnInfo.ToLdnNetworkInfo();
+                ldnInfo.AuthenticationToken = BinaryPrimitives.ReverseEndianness(ldnInfo.AuthenticationToken);
+                return ldnInfo;
             }
             set
             {
@@ -267,10 +267,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                     value.Nodes[i].LocalCommunicationVersion = BinaryPrimitives.ReverseEndianness(value.Nodes[i].LocalCommunicationVersion);
                 }
                 value.AdvertiseDataSize = BinaryPrimitives.ReverseEndianness(value.AdvertiseDataSize);
-                value.AuthenticationId = BinaryPrimitives.ReverseEndianness(value.AuthenticationId);
+                value.AuthenticationToken = BinaryPrimitives.ReverseEndianness(value.AuthenticationToken);
                 BodySize = (ushort)Marshal.SizeOf<NxLdnNetworkInfo>();
-                NxLdnNetworkInfo info = NxLdnNetworkInfo.FromLdnNetworkInfo(value);
-                MemoryMarshal.Write(Payload, ref info);
+                MemoryMarshal.Write(Payload, ref value);
             }
         }
 

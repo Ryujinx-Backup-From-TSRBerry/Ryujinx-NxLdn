@@ -93,10 +93,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             _adapter.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
         }
 
-        public override bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength, out NetworkInfo networkInfo)
+        public override bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo)
         {
             _ap = new Network.AccessPoint(this);
-            _ap.BuildNewNetworkInfo(request, advertiseData, advertiseDataLength);
+            _ap.BuildNewNetworkInfo(request);
             SetAdapterChannel(_networkInfo.Common.Channel);
             networkInfo = _networkInfo;
             return _ap.Start();
@@ -109,10 +109,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             PhysicalAddress destAddr = new PhysicalAddress(request.NetworkInfo.Common.MacAddress.AsSpan().ToArray());
             // 512
             InformationElementList infoElementList = new InformationElementList();
+            // infoElementList.Add(new InformationElement())
             AuthenticationFrame authFrame = new AuthenticationFrame(_adapter.MacAddress, destAddr, destAddr, infoElementList);
             authFrame.PayloadData = authRequest.Encode();
             radioPacket.PayloadPacket = authFrame;
             _adapter.SendPacket(radioPacket);
+            _captureFileWriterDevice.SendPacket(radioPacket);
             // TODO: Add AuthenticationResponse handling
             Thread.Sleep(5000);
             return NetworkError.None;
