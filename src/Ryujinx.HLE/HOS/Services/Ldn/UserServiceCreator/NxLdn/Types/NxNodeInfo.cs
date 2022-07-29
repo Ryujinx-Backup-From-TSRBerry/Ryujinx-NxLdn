@@ -14,14 +14,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
 
         public byte IsConnected;
 
-        private byte pad;
+        private byte _pad1;
 
         public Array32<byte> UserName;
 
         // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L122
         public ushort LocalCommunicationVersion;
 
-        public Array10<byte> Reserved1;
+        private Array10<byte> _pad2;
 
         public NodeInfo ToNodeInfo(byte nodeId)
         {
@@ -51,9 +51,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
                 Ipv4Address = info.Ipv4Address,
                 MacAddress = info.MacAddress,
                 IsConnected = info.IsConnected,
+                _pad1 = 0,
                 UserName = username,
                 LocalCommunicationVersion = info.LocalCommunicationVersion,
-                Reserved1 = new Array10<byte>()
+                _pad2 = new Array10<byte>()
             };
         }
     }

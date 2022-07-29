@@ -1,6 +1,6 @@
 using PacketDotNet.Ieee80211;
-using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
 using SharpPcap;
 using System;
@@ -14,9 +14,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         private DebugAdapterHandler _parent;
         private PhysicalAddress _macAddress;
 
-        public override void BuildNewNetworkInfo(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength)
+        public override void BuildNewNetworkInfo(CreateAccessPointRequest request)
         {
-            base.BuildNewNetworkInfo(request, advertiseData, advertiseDataLength);
+            base.BuildNewNetworkInfo(request);
             _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
             _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
             LogMsg("AP: New NetworkInfo created.");
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             {
                 Header = _parent._networkInfo.NetworkId,
                 Encryption = 2, // can be 1(plain) or 2(AES-CTR) -> https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-payload
-                Info = _parent._networkInfo.Ldn,
+                Info = NxLdnNetworkInfo.FromLdnNetworkInfo(_parent._networkInfo.Ldn),
                 Nonce = nonce,
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };

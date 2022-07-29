@@ -34,10 +34,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
-        public override bool CreateNetwork(CreateAccessPointRequest request, Array384<byte> advertiseData, ushort advertiseDataLength, out NetworkInfo networkInfo)
+        public override bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo)
         {
             _ap = new Network.DebugAccessPoint(this);
-            _ap.BuildNewNetworkInfo(request, advertiseData, advertiseDataLength);
+            _ap.BuildNewNetworkInfo(request);
             networkInfo = _networkInfo;
             return _ap.Start();
         }

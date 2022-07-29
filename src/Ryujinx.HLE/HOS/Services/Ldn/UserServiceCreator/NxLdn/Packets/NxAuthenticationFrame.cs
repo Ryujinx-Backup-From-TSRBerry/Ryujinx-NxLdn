@@ -199,7 +199,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             PacketHeader = byteArraySegment;
         }
 
-        public static bool TryGetNxAuthenticationFrame(DataFrame data, out NxAuthenticationFrame authFrame)
+        public static bool TryGetNxAuthenticationFrame(AuthenticationFrame data, out NxAuthenticationFrame authFrame)
         {
             if (data.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Authentication)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Authentication)))
             {

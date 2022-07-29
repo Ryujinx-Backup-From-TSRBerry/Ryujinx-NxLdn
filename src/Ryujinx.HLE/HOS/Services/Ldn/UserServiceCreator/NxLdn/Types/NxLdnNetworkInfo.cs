@@ -1,5 +1,6 @@
 using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
@@ -13,9 +14,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
 
         public byte StationAcceptPolicy;
 
-        public byte Unknown1;
+        private byte _pad1;
 
-        public ushort Reserved1;
+        private ushort _pad2;
 
         public byte NodeCountMax;
 
@@ -23,16 +24,15 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
 
         public Array8<NxNodeInfo> Nodes;
 
-        public ushort Reserved2;
+        private ushort _pad3;
 
         public ushort AdvertiseDataSize;
 
         public Array384<byte> AdvertiseData;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 412)]
-        public Array412<byte> Unknown2;
+        private Array412<byte> _pad4;
 
-        public ulong AuthenticationId;
+        public ulong AuthenticationToken;
 
         public LdnNetworkInfo ToLdnNetworkInfo()
         {
@@ -41,21 +41,23 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
                 SecurityParameter = this.SecurityParameter,
                 SecurityMode = this.SecurityMode,
                 StationAcceptPolicy = this.StationAcceptPolicy,
-                Unknown1 = this.Unknown1,
-                Reserved1 = this.Reserved1,
+                Unknown1 = 0,
+                Reserved1 = 0,
                 NodeCountMax = this.NodeCountMax,
                 NodeCount = this.NodeCount,
                 Nodes = new Array8<NodeInfo>(),
-                Reserved2 = this.Reserved2,
+                Reserved2 = 0,
                 AdvertiseDataSize = this.AdvertiseDataSize,
                 AdvertiseData = this.AdvertiseData,
                 Unknown2 = new Array140<byte>(),
-                AuthenticationId = this.AuthenticationId
+                AuthenticationId = this.AuthenticationToken
             };
+
+            netInfo.Unknown2.AsSpan().Fill(0);
 
             for (int i = 0; i < this.Nodes.Length; i++)
             {
-                netInfo.Nodes[i] = this.Nodes[i].ToNodeInfo((byte)(i + 1));
+                netInfo.Nodes[i] = this.Nodes[i].ToNodeInfo((byte)(i));
             }
 
             return netInfo;
@@ -68,17 +70,19 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types
                 SecurityParameter = netInfo.SecurityParameter,
                 SecurityMode = netInfo.SecurityMode,
                 StationAcceptPolicy = netInfo.StationAcceptPolicy,
-                Unknown1 = netInfo.Unknown1,
-                Reserved1 = netInfo.Reserved1,
+                _pad1 = 0,
+                _pad2 = 0,
                 NodeCountMax = netInfo.NodeCountMax,
                 NodeCount = netInfo.NodeCount,
                 Nodes = new Array8<NxNodeInfo>(),
-                Reserved2 = netInfo.Reserved2,
+                _pad3 = 0,
                 AdvertiseDataSize = netInfo.AdvertiseDataSize,
                 AdvertiseData = netInfo.AdvertiseData,
-                Unknown2 = new Array412<byte>(),
-                AuthenticationId = netInfo.AuthenticationId
+                _pad4 = new Array412<byte>(),
+                AuthenticationToken = netInfo.AuthenticationId
             };
+
+            nxNetInfo._pad4.AsSpan().Fill(0);
 
             for (int i = 0; i < netInfo.Nodes.Length; i++)
             {

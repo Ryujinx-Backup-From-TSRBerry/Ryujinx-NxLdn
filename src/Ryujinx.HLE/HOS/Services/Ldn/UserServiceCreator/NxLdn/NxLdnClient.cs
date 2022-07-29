@@ -1,5 +1,6 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
@@ -12,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
     {
         public IUserLocalCommunicationService _commService;
         private HLEConfiguration _config;
-        public ProxyConfig Config { get; }
+        public ProxyConfig Config { get; private set; }
         public bool NeedsRealId => true;
 
         private BaseAdapterHandler _adapterHandler;
@@ -20,10 +21,19 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public event EventHandler<NetworkChangeEventArgs> NetworkChange;
 
         // TODO: Remove debug stuff
-        private void LogMsg(string msg)
+        private static void LogMsg(string msg, object obj = null)
         {
-            Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
+            if (obj != null)
+            {
+                string jsonString = JsonHelper.Serialize<object>(obj, true);
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n" + jsonString);
+            }
+            else
+            {
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
+            }
         }
+
 
         public NxLdnClient(IUserLocalCommunicationService parent, HLEConfiguration config)
         {
@@ -80,12 +90,15 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         {
             LogMsg("NxLdnClient CreateNetwork");
 
-            Array384<byte> adData = new();
-            advertiseData.CopyTo(adData.AsSpan());
-
-            if (_adapterHandler.CreateNetwork(request, adData, (ushort)advertiseData.Length, out NetworkInfo networkInfo))
+            if (_adapterHandler.CreateNetwork(request, out NetworkInfo networkInfo))
             {
-                NetworkChange.Invoke(this, new NetworkChangeEventArgs(networkInfo, true));
+                LogMsg("NxLdnClient Network created: ", networkInfo);
+                Config = new ProxyConfig
+                {
+                    ProxyIp = networkInfo.Ldn.Nodes[0].Ipv4Address,
+                    ProxySubnetMask = NetworkHelpers.ConvertIpv4Address("255.255.255.0")
+                };
+                NetworkChange?.Invoke(this, new NetworkChangeEventArgs(networkInfo, true));
                 return true;
             }
 
@@ -133,7 +146,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public void SetAdvertiseData(byte[] data)
         {
             LogMsg("NxLdnClient SetAdvertiseData");
-            _adapterHandler.SetAdvertiseData(data);
+            if (_adapterHandler.SetAdvertiseData(data, out NetworkInfo networkInfo))
+            {
+                NetworkChange?.Invoke(this, new NetworkChangeEventArgs(networkInfo, true));
+            }
         }
 
         public void SetGameVersion(byte[] versionString)
