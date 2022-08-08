@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 else if (OperatingSystem.IsWindows())
                 {
                     process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
-                    process.StartInfo.Arguments = $"\"{_adapter.Name}\" channel {channel}";
+                    process.StartInfo.Arguments = $"\"{_adapter.Interface.FriendlyName}\" channel {channel}";
                 }
                 else
                 {

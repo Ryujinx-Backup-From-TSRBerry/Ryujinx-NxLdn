@@ -56,8 +56,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 // TODO: maybe filter for wifi devices? - eh, probably not (don't want to interfere with other cool projects)
                 foreach (LibPcapLiveDevice device in LibPcapLiveDeviceList.Instance)
                 {
-                    if (device.Name == _config.MultiplayerLanInterfaceId)
+                    LogMsg($"NxLdnClient Looping through adapters: {device.Name} {device.Interface.Name}");
+                    if (device.Name == _config.MultiplayerLanInterfaceId || device.Name.Contains(_config.MultiplayerLanInterfaceId))
                     {
+                        LogMsg($"NxLdnClient Found matching adapter: {device.Name} {device.Interface.Name}");
                         _adapterHandler = new AdapterHandler(device, true);
                         break;
                     }
