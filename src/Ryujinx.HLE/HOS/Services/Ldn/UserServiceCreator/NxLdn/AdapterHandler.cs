@@ -22,34 +22,39 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         private bool SetAdapterChannel(ushort channel)
         {
-            using (Process process = new Process())
+            if (OperatingSystem.IsLinux())
             {
-                process.StartInfo.CreateNoWindow = true;
-                if (OperatingSystem.IsLinux())
+                using (Process process = new Process())
                 {
+                    process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.FileName = "iw";
                     process.StartInfo.Arguments = $"dev {_adapter.Name} set channel {channel}";
-                }
-                else if (OperatingSystem.IsWindows())
-                {
-                    process.StartInfo.FileName = $"{Environment.SystemDirectory}\\Npcap\\WlanHelper.exe";
-                    process.StartInfo.Arguments = $"\"{_adapter.Interface.FriendlyName}\" channel {channel}";
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-                process.StartInfo.RedirectStandardError = true;
-                // LogMsg($"AdapterHandler: Setting channel to {channel}...");
-                process.Start();
-                process.WaitForExit();
-                // LogMsg($"AdapterHandler: process exited with code: {process.ExitCode} - Error Output: {process.StandardError.ReadToEnd()}");
-                if (process.ExitCode == 0)
-                {
-                    currentChannel = channel;
-                }
+                    process.StartInfo.RedirectStandardError = true;
+                    // LogMsg($"AdapterHandler: Setting channel to {channel}...");
+                    process.Start();
+                    process.WaitForExit();
+                    // LogMsg($"AdapterHandler: process exited with code: {process.ExitCode} - Error Output: {process.StandardError.ReadToEnd()}");
+                    if (process.ExitCode == 0)
+                    {
+                        currentChannel = channel;
+                    }
 
-                return process.ExitCode == 0;
+                    return process.ExitCode == 0;
+                }
+            }
+            else if (OperatingSystem.IsWindows())
+            {
+                using (PacketSharp packet = new(_adapter.Name.Split('{', '}')[1]))
+                {
+                    uint oldChannel = packet.Channel;
+                    packet.Channel = channel;
+
+                    return true; // TODO: Do a better error handling on PacketSharp class if then channel can't be changed.
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
         }
 
