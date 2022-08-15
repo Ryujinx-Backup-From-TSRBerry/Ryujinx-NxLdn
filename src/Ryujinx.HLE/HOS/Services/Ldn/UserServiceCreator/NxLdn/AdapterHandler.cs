@@ -1,6 +1,6 @@
 using PacketDotNet;
 using PacketDotNet.Ieee80211;
-using Ryujinx.Common.Memory;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
@@ -17,8 +17,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
     class AdapterHandler : BaseAdapterHandler
     {
-        internal LibPcapLiveDevice _adapter;
-        private Network.AccessPoint _ap;
+        internal LibPcapLiveDevice  _adapter;
+        private Network.AccessPoint _accessPoint;
 
         private bool SetAdapterChannel(ushort channel)
         {
@@ -30,13 +30,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     process.StartInfo.FileName = "iw";
                     process.StartInfo.Arguments = $"dev {_adapter.Name} set channel {channel}";
                     process.StartInfo.RedirectStandardError = true;
-                    // LogMsg($"AdapterHandler: Setting channel to {channel}...");
+                    // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdapterHandler: Setting channel to {channel}...");
                     process.Start();
                     process.WaitForExit();
-                    // LogMsg($"AdapterHandler: process exited with code: {process.ExitCode} - Error Output: {process.StandardError.ReadToEnd()}");
+                    // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdapterHandler: process exited with code: {process.ExitCode} - Error Output: {process.StandardError.ReadToEnd()}");
                     if (process.ExitCode == 0)
                     {
-                        currentChannel = channel;
+                        _currentChannel = channel;
                     }
 
                     return process.ExitCode == 0;
@@ -58,84 +58,91 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
-        /*
-        * Handles everything related to the WiFi adapter
-        */
-        public AdapterHandler(LibPcapLiveDevice device, bool storeCapture = false) : base(storeCapture, false)
+        public AdapterHandler(LibPcapLiveDevice adapter, bool storeCapture = false, bool debugMode = false) : base(storeCapture, debugMode)
         {
-            _adapter = device;
+            _adapter = adapter;;
 
-            // If this wasn't executed in main it will fail here
-            // But if it was then there is no need for that call (since the caps are already set correctly)
+            // NOTE: If this wasn't executed in main it will fail here.
+            //       But if it was then there is no need for that call (since the caps are already set correctly).
             if (OperatingSystem.IsLinux() && !Capabilities.InheritCapabilities())
             {
                 throw new SystemException("Raising capabilities failed");
             }
 
-            LogMsg("AdapterHandler trying to access the adapter now...");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdapterHandler trying to access the adapter now...");
 
-            // Crashing here means the device is not ready or "operation not permitted"
-            // Linux: CAP_NET_RAW,CAP_NET_ADMIN are required
-            // Windows: Npcap needs to be configured without admin-only access or Ryujinx needs to be started as Admin
-            // Configure and open wifi adapter
+            // NOTE: Crashing here means the device is not ready or "operation not permitted".
+            //       - Linux: CAP_NET_RAW,CAP_NET_ADMIN are required.
+            //       - Windows: Npcap needs to be configured without admin-only access or Ryujinx needs to be started as Admin.
             _adapter.Open(new DeviceConfiguration()
             {
-                Monitor = MonitorMode.Active,
-                // TODO: Test without monitor mode
-                // Mode = DeviceModes.Promiscuous,
+                Mode          = DeviceModes.MaxResponsiveness,
+                Monitor       = MonitorMode.Active, // TODO: Test without monitor mode
                 LinkLayerType = LinkLayers.Ieee80211
             });
 
             if (_storeCapture)
             {
-                LogMsg("AdapterHandler: Dumping raw packets to file...");
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdapterHandler: Dumping raw packets to file...");
+
                 _captureFileWriterDevice = new CaptureFileWriterDevice("debug-cap.pcap");
                 _captureFileWriterDevice.Open(_adapter);
             }
 
-            LogMsg("AdapterHandler opened the adapter successfully!");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdapterHandler opened the adapter successfully!");
 
+            // Register our handler function to the "packet arrival" event.
             _adapter.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
-
-            _adapter.StartCapture();
         }
 
         public override bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo)
         {
-            _ap = new Network.AccessPoint(this);
-            _ap.BuildNewNetworkInfo(request);
+            _accessPoint = new Network.AccessPoint(this);
+            _accessPoint.BuildNewNetworkInfo(request);
+
             SetAdapterChannel(_networkInfo.Common.Channel);
+
             networkInfo = _networkInfo;
-            return _ap.Start();
+
+            return _accessPoint.Start();
         }
 
         public override NetworkError Connect(ConnectRequest request)
         {
-            RadioPacket radioPacket = new RadioPacket();
-            NxAuthenticationFrame authRequest = base.BuildAuthenticationRequest(request);
-            PhysicalAddress destAddr = new PhysicalAddress(request.NetworkInfo.Common.MacAddress.AsSpan().ToArray());
-            // 512
+            RadioPacket            radioPacket     = new RadioPacket();
+            NxAuthenticationFrame  authRequest     = BuildAuthenticationRequest(request);
+            PhysicalAddress        destAddr        = new PhysicalAddress(request.NetworkInfo.Common.MacAddress.AsSpan().ToArray()); // 512
             InformationElementList infoElementList = new InformationElementList();
-            // infoElementList.Add(new InformationElement())
-            AuthenticationFrame authFrame = new AuthenticationFrame(_adapter.MacAddress, destAddr, destAddr, infoElementList);
-            authFrame.PayloadData = authRequest.Encode();
+            AuthenticationFrame    authFrame       = new AuthenticationFrame(_adapter.MacAddress, destAddr, destAddr, infoElementList)
+            {
+                PayloadData = authRequest.Encode()
+            };
+
             radioPacket.PayloadPacket = authFrame;
+
             _adapter.SendPacket(radioPacket);
-            _captureFileWriterDevice.SendPacket(radioPacket);
+
+            if (_storeCapture)
+            {
+                _captureFileWriterDevice.SendPacket(radioPacket);
+            }
+
             // TODO: Add AuthenticationResponse handling
             Thread.Sleep(5000);
+
             return NetworkError.None;
         }
 
         public override NetworkInfo[] Scan(ushort channel)
         {
-            if (!channels.Contains(channel))
+            // NOTE: Channel should be checked somewhere else ?
+            if (!_channels.Contains(channel))
             {
-                // LogMsg($"Scan Warning: {channel} is not in channel list.");
-                if (currentChannel != 0)
+                // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Scan Warning: {channel} is not in channel list.");
+                if (_currentChannel != 0)
                 {
-                    int index = Array.IndexOf(channels, currentChannel);
-                    if (index == channels.Length - 1)
+                    int index = Array.IndexOf(_channels, _currentChannel);
+                    if (index == _channels.Length - 1)
                     {
                         index = 0;
                     }
@@ -143,46 +150,49 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     {
                         index++;
                     }
-                    channel = channels[index];
+                    channel = _channels[index];
                 }
                 else
                 {
-                    channel = channels[0];
+                    channel = _channels[0];
                 }
             }
-            if (currentChannel != channel)
+
+            if (_currentChannel != channel)
             {
                 if (!SetAdapterChannel(channel))
                 {
-                    LogMsg($"Scan Error: Could not set adapter channel: {channel}");
-                    return new NetworkInfo[] { };
+                    Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Scan Error: Could not set adapter channel: {channel}");
+
+                    return Array.Empty<NetworkInfo>();
                 }
             }
 
             _scanResults.Clear();
 
-            Thread.Sleep(_scanDwellTime);
+            // NOTE: Using _adapter.StartCapture() and _adapter.StartCapture() in a small delay doesn't seems to be handled correctly under windows.
+            //       Capture a large amount of packet could avoid this issue without speed issues.
+            _adapter.Capture(256);
+
             if (_scanResults.Count > 0)
-                LogMsg($"Returning Networks: {_scanResults.Count}");
+            {
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Returning Networks: {_scanResults.Count}");
+            }
 
             return _scanResults.ToArray();
         }
 
         public override void DisconnectAndStop()
         {
-            LogMsg("AdapterHandler cleaning up...");
-            if (_adapter.Started)
-                _adapter.StopCapture();
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdapterHandler cleaning up...");
+
             if (_adapter.Opened)
+            {
                 _adapter.Close();
+            }
         }
 
-        public override void DisconnectNetwork()
-        {
-            // TODO: Figure out why starting and stopping packet capture
-            //       every 100ms leads to issues on windows
-            // _adapter.StopCapture();
-        }
+        public override void DisconnectNetwork() { }
 
         public override void Dispose()
         {

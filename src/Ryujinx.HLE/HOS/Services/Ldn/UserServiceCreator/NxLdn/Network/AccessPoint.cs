@@ -1,5 +1,6 @@
 using PacketDotNet.Ieee80211;
 using Ryujinx.Common.Memory;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
@@ -18,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             base.BuildNewNetworkInfo(request);
             _parent._adapter.MacAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
             _parent._adapter.MacAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
-            LogMsg("AP: New NetworkInfo created.");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AP: New NetworkInfo created.");
         }
 
         protected override RadioPacket GetAdvertisementFrame()
@@ -37,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             };
             advertisement.WriteHash();
             // LogMsg("AP: Created AdvertisementFrame: ", advertisement);
-            LogMsg($"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
             action.UpdateFrameCheckSequence();

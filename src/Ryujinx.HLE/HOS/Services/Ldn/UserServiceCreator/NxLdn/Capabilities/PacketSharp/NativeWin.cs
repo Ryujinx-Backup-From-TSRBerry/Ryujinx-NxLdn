@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
+namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
 {
     public static class NativeWin
     {
         [DllImport(@"Npcap\Packet.dll", SetLastError = true)]
         public static extern IntPtr PacketGetVersion();
+
         [DllImport(@"Npcap\Packet.dll", SetLastError = true)]
         public static extern IntPtr PacketGetDriverVersion();
 

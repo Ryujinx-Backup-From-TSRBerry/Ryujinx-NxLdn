@@ -1,4 +1,5 @@
 using Ryujinx.Common.Memory;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
@@ -6,18 +7,14 @@ using SharpPcap;
 using SharpPcap.LibPcap;
 using System;
 using System.Linq;
-using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
     class DebugAdapterHandler : BaseAdapterHandler
     {
         internal CaptureFileReaderDevice _adapter;
-        private Network.DebugAccessPoint _ap;
+        private Network.DebugAccessPoint _accessPoint;
 
-        /*
-        * Handles everything related to the WiFi adapter
-        */
         public DebugAdapterHandler(CaptureFileReaderDevice device) : base(true, true)
         {
             _adapter = device;
@@ -28,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             if (_storeCapture)
             {
-                LogMsg("AdapterHandler: Dumping raw packets to file...");
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdapterHandler: Dumping raw packets to file...");
                 _captureFileWriterDevice = new CaptureFileWriterDevice("debug-cap.pcap");
                 _captureFileWriterDevice.Open(_adapter);
             }
@@ -36,28 +33,30 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public override bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo)
         {
-            _ap = new Network.DebugAccessPoint(this);
-            _ap.BuildNewNetworkInfo(request);
+            _accessPoint = new Network.DebugAccessPoint(this);
+            _accessPoint.BuildNewNetworkInfo(request);
+
             networkInfo = _networkInfo;
-            return _ap.Start();
+
+            return _accessPoint.Start();
         }
 
         public override NetworkError Connect(ConnectRequest request)
         {
-            NxAuthenticationFrame authRequest = base.BuildAuthenticationRequest(request);
+            NxAuthenticationFrame authRequest = BuildAuthenticationRequest(request);
 
             return NetworkError.None;
         }
 
         public override NetworkInfo[] Scan(ushort channel)
         {
-            if (!channels.Contains(channel))
+            if (!_channels.Contains(channel))
             {
                 // LogMsg($"Scan Warning: {channel} is not in channel list.");
-                if (currentChannel != 0)
+                if (_currentChannel != 0)
                 {
-                    int index = Array.IndexOf(channels, currentChannel);
-                    if (index == channels.Length - 1)
+                    int index = Array.IndexOf(_channels, _currentChannel);
+                    if (index == _channels.Length - 1)
                     {
                         index = 0;
                     }
@@ -65,20 +64,18 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     {
                         index++;
                     }
-                    channel = channels[index];
+                    channel = _channels[index];
                 }
                 else
                 {
-                    channel = channels[0];
+                    channel = _channels[0];
                 }
             }
-            currentChannel = channel;
+            _currentChannel = channel;
 
             _scanResults.Clear();
 
-            _adapter.StartCapture();
-
-            Thread.Sleep(_scanDwellTime);
+            _adapter.Capture(256);
 
             return _scanResults.ToArray();
         }
@@ -86,13 +83,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public override void DisconnectAndStop()
         {
             if (_adapter.Opened)
+            {
                 _adapter.Close();
+            }
         }
 
-        public override void DisconnectNetwork()
-        {
-            _adapter.StopCapture();
-        }
+        public override void DisconnectNetwork() { }
 
         public override void Dispose()
         {

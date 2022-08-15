@@ -1,6 +1,4 @@
 using LibHac.Common.Keys;
-using Ryujinx.Common.Logging;
-using Ryujinx.Common.Utilities;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
@@ -11,22 +9,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public static void Initialize(KeySet keySet)
         {
-            EncryptionHelper._keySet = keySet;
+            _keySet = keySet;
         }
-
-        // TODO: Remove debug stuff
-        // private static void LogMsg(string msg, object obj = null)
-        // {
-        //     if (obj != null)
-        //     {
-        //         string jsonString = JsonHelper.Serialize<object>(obj, true);
-        //         Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n" + jsonString);
-        //     }
-        //     else
-        //     {
-        //         Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
-        //     }
-        // }
 
         private static Span<byte> DecryptKey(Span<byte> input, Span<byte> key)
         {
@@ -52,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             // LogMsg($"Input: ", input);
             LibHac.Crypto.Sha256.GenerateSha256Hash(input, hash);
             // LogMsg("Sha256: ", hash.ToArray());
-            return DecryptKey(hash.Slice(0, 16), key).ToArray();
+            return DecryptKey(hash[..16], key).ToArray();
         }
     }
 }
