@@ -91,6 +91,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             LogMsg("AdapterHandler opened the adapter successfully!");
 
             _adapter.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
+
+            _adapter.StartCapture();
         }
 
         public override bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo)
@@ -154,8 +156,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             _scanResults.Clear();
 
-            _adapter.StartCapture();
-
             Thread.Sleep(_scanDwellTime);
             if (_scanResults.Count > 0)
                 LogMsg($"Returning Networks: {_scanResults.Count}");
@@ -166,13 +166,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public override void DisconnectAndStop()
         {
             LogMsg("AdapterHandler cleaning up...");
+            if (_adapter.Started)
+                _adapter.StopCapture();
             if (_adapter.Opened)
                 _adapter.Close();
         }
 
         public override void DisconnectNetwork()
         {
-            _adapter.StopCapture();
+            // TODO: Figure out why starting and stopping packet capture
+            //       every 100ms leads to issues on windows
+            // _adapter.StopCapture();
         }
 
         public override void Dispose()
