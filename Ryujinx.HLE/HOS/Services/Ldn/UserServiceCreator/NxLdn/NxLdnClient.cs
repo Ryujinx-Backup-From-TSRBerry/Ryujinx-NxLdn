@@ -168,6 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public void Dispose()
         {
             LogMsg("NxLdnClient Dispose");
+            _adapterHandler.Dispose();
         }
 
         public void HandleUpdateNodes(NetworkInfo info)
