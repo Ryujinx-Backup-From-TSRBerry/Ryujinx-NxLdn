@@ -51,6 +51,6 @@
     <PackageVersion Include="XamlNameReferenceGenerator" Version="1.6.1" />
     <PackageVersion Include="NetCoreServer" Version="7.0.0" />
     <PackageVersion Include="Open.NAT.Core" Version="2.1.0.5" />
-    <PackageVersion Include="SharpPcap" Version="6.2.1" />
+    <PackageVersion Include="SharpPcap" Version="6.2.2" />
   </ItemGroup>
 </Project>
