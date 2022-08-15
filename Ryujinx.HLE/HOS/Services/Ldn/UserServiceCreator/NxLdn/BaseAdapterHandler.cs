@@ -13,41 +13,26 @@ using SharpPcap.LibPcap;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
     abstract class BaseAdapterHandler : IDisposable
     {
-        internal bool _storeCapture = false;
-        internal bool _debugMode = false;
-        internal Random _random = new Random();
+        internal ushort[] _channels = { 1, 6, 11 };
+
+        internal bool        _storeCapture = false;
+        internal bool        _debugMode = false;
+        internal Random      _random = new Random();
+        internal ushort      _currentChannel;
+        internal NetworkInfo _networkInfo;
+        internal byte[]      _gameVersion;
 
         internal CaptureFileWriterDevice _captureFileWriterDevice;
 
-        protected ushort[] channels = { 1, 6, 11 };
-        protected ushort currentChannel = 0;
+        internal List<NetworkInfo> _scanResults = new List<NetworkInfo>();
 
-        internal NetworkInfo _networkInfo;
-        protected byte[] _gameVersion;
-
-        protected List<NetworkInfo> _scanResults = new List<NetworkInfo>();
-        protected readonly int _scanDwellTime = 110;
-
-        // TODO: Remove debug stuff
-        protected static void LogMsg(string msg, object obj = null)
-        {
-            if (obj != null)
-            {
-                string jsonString = JsonHelper.Serialize<object>(obj, true);
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n" + jsonString);
-            }
-            else
-            {
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
-            }
-        }
-
-        protected static NetworkInfo GetEmptyNetworkInfo()
+        private static NetworkInfo GetEmptyNetworkInfo()
         {
             NetworkInfo networkInfo = new NetworkInfo
             {
@@ -95,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             Array33<byte> sessionId = new();
             advertisement.Header.SessionId.AsSpan().CopyTo(sessionId.AsSpan());
 
-            LogMsg($"Header length: {Marshal.SizeOf(advertisement.Header)} / {Marshal.SizeOf<NetworkId>()} | Info length: {Marshal.SizeOf(advertisement.Info)} / {Marshal.SizeOf<LdnNetworkInfo>()}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Header length: {Marshal.SizeOf(advertisement.Header)} / {Marshal.SizeOf<NetworkId>()} | Info length: {Marshal.SizeOf(advertisement.Info)} / {Marshal.SizeOf<LdnNetworkInfo>()}");
             networkInfo = GetEmptyNetworkInfo();
             networkInfo.NetworkId = advertisement.Header;
             networkInfo.Common.Ssid.Length = (byte)advertisement.Header.SessionId.Length;
@@ -108,19 +93,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             action.SourceAddress.GetAddressBytes().CopyTo(networkInfo.Common.MacAddress.AsSpan());
 
-            LogMsg($"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"NetworkInfo length: {Marshal.SizeOf(networkInfo)} / {Marshal.SizeOf<NetworkInfo>()}");
 
-            // LogMsg($"Built NetworkInfo: ", networkInfo);
-            // TODO: Remove debug stuff
-            string username = System.Text.Encoding.UTF8.GetString(networkInfo.Ldn.Nodes[0].UserName.AsSpan());
-            LogMsg($"Node 0 - Username: {username}");
+            // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Built NetworkInfo: \n{JsonHelper.Serialize<object>(networkInfo, true)}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Node 0 - Username: {Encoding.UTF8.GetString(networkInfo.Ldn.Nodes[0].UserName.AsSpan())}");
 
             // https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)Swap_endianness('Raw',8,true)To_Hex('None',0)
-            LogMsg($"LocalCommunicationId: ", BitConverter.GetBytes(networkInfo.NetworkId.IntentId.LocalCommunicationId));
-            LogMsg($"SceneId: {networkInfo.NetworkId.IntentId.SceneId}");
-            LogMsg($"AppVersion: {networkInfo.Ldn.Nodes[0].LocalCommunicationVersion}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"LocalCommunicationId: {networkInfo.NetworkId.IntentId.LocalCommunicationId:x16}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"SceneId: {networkInfo.NetworkId.IntentId.SceneId}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AppVersion: {networkInfo.Ldn.Nodes[0].LocalCommunicationVersion}");
 
-            return (Marshal.SizeOf(networkInfo) == Marshal.SizeOf<NetworkInfo>());
+            return Marshal.SizeOf(networkInfo) == Marshal.SizeOf<NetworkInfo>();
         }
 
         protected void OnPacketArrival(object s, PacketCapture e)
@@ -139,7 +122,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             var packet = Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
 
             if (_debugMode)
-                currentChannel = (ushort)((ChannelRadioTapField)packet.Extract<RadioPacket>()[RadioTapType.Channel]).Channel;
+            {
+                _currentChannel = (ushort)((ChannelRadioTapField)packet.Extract<RadioPacket>()[RadioTapType.Channel]).Channel;
+            }
 
             // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L710
             // RadioPacket HasPayloadPacket -> ActionFrame
@@ -152,12 +137,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 }
 
                 // LogMsg($"OnScanPacketArrival: Got Packet: {packet.ToString(StringOutputType.VerboseColored)}");
-                LogMsg($"OnScanPacketArrival: RadioPacket: Header length: {packet.HeaderData.Length} / Payload length: {packet.PayloadPacket.TotalPacketLength}");
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnScanPacketArrival: RadioPacket: Header length: {packet.HeaderData.Length} / Payload length: {packet.PayloadPacket.TotalPacketLength}");
                 // LogMsg($"OnScanPacketArrival: RadioPacket: {string.Join(" ", packet.PayloadPacket.HeaderData.Select(x => x.ToString("X2")))}");
                 // LogMsg($"OnScanPacketArrival: RadioPacket: {packet.PrintHex()}");
                 // LogMsg($"OnScanPacketArrival: Action Frame? {packet.HasPayloadPacket}");
                 // ActionFrame
-                LogMsg($"OnScanPacketArrival: RadioPacket PayloadPacket type: {packet.PayloadPacket.GetType()}");
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnScanPacketArrival: RadioPacket PayloadPacket type: {packet.PayloadPacket.GetType()}");
                 // This does not work - I have no idea why
                 // {packet.PayloadPacket.ToString(StringOutputType.VerboseColored)}
 
@@ -165,28 +150,28 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 {
                     case ActionFrame:
                         ActionFrame action = packet.Extract<ActionFrame>();
-                        LogMsg($"OnScanPacketArrival: Got RadioPacket from: {action.SourceAddress.ToString()}");
+                        Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnScanPacketArrival: Got RadioPacket from: {action.SourceAddress}");
                         // ActionFrame HasPayloadData -> Action(?)
                         // LogMsg($"OnScanPacketArrival: Action Frame: [{action.TotalPacketLength}] {action.ToString(StringOutputType.VerboseColored)}");
                         // LogMsg($"Action Payload: {action.HasPayloadPacket} / Action Data: {action.HasPayloadData}");
                         // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L719
                         if (AdvertisementFrame.TryGetAdvertisementFrame(action, out AdvertisementFrame adFrame))
                         {
-                            LogMsg($"ActionPayloadData matches LDN header!");
+                            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"ActionPayloadData matches LDN header!");
                             // LogMsg("AdvertisementFrame: ", adFrame);
 
-                            if (BuildNetworkInfo(currentChannel, action, adFrame, out NetworkInfo networkInfo))
+                            if (BuildNetworkInfo(_currentChannel, action, adFrame, out NetworkInfo networkInfo))
                             {
-                                LogMsg("Got networkInfo: ", networkInfo);
+                                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Got networkInfo: \n{JsonHelper.Serialize<object>(networkInfo, true)}");
                                 if (!_scanResults.Contains(networkInfo))
                                 {
                                     _scanResults.Add(networkInfo);
-                                    LogMsg("Added NetworkInfo to scanResults.");
+                                    Logger.Info?.PrintMsg(LogClass.ServiceLdn, "Added NetworkInfo to scanResults.");
                                 }
                             }
                             else
                             {
-                                LogMsg("Invalid NetworkInfo packet skipped.");
+                                Logger.Info?.PrintMsg(LogClass.ServiceLdn, "Invalid NetworkInfo packet skipped.");
                             }
                         }
                         break;
@@ -194,8 +179,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                         AuthenticationFrame authFrame = packet.Extract<AuthenticationFrame>();
                         if (NxAuthenticationFrame.TryGetNxAuthenticationFrame(authFrame, out NxAuthenticationFrame nxAuthFrame))
                         {
-                            LogMsg("OnPacketArrival: Authentication packet header matches!");
-                            LogMsg("OnPacketArrival: AuthenticationFrame: ", nxAuthFrame);
+                            Logger.Info?.PrintMsg(LogClass.ServiceLdn, "OnPacketArrival: Authentication packet header matches!");
+                            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnPacketArrival: AuthenticationFrame: \n{JsonHelper.Serialize<object>(nxAuthFrame, true)}");
                         }
                         break;
                 }
@@ -222,10 +207,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public virtual void SetGameVersion(byte[] versionString)
         {
             _gameVersion = versionString;
-            LogMsg("GameVersion: ", versionString);
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"GameVersion: {Encoding.UTF8.GetString(versionString)}");
             if (_gameVersion.Length < 16)
             {
-                Array.Resize<byte>(ref _gameVersion, 16);
+                Array.Resize(ref _gameVersion, 16);
             }
         }
 

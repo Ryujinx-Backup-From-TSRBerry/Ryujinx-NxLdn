@@ -1,12 +1,10 @@
 using PacketDotNet.Ieee80211;
-using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
-using System;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
@@ -19,20 +17,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         private BaseAdapterHandler _parent;
         protected PacketArrivalEventHandler _eventHandler;
         private Thread t;
-
-        // TODO: Remove debug stuff
-        protected static void LogMsg(string msg, object obj = null)
-        {
-            if (obj != null)
-            {
-                string jsonString = JsonHelper.Serialize<object>(obj, true);
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n" + jsonString);
-            }
-            else
-            {
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg);
-            }
-        }
 
         protected virtual void OnPacketArrival(object s, PacketCapture e)
         {

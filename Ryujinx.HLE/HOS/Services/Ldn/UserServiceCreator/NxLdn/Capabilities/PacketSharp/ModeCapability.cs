@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
+﻿namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
 {
     public enum ModeCapability
     {

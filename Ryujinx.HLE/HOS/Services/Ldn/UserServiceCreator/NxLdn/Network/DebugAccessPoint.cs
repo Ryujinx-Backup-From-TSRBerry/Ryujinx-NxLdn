@@ -1,4 +1,6 @@
 using PacketDotNet.Ieee80211;
+using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
@@ -19,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             base.BuildNewNetworkInfo(request);
             _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Common.MacAddress.AsSpan());
             _macAddress.GetAddressBytes().CopyTo(_parent._networkInfo.Ldn.Nodes[0].MacAddress.AsSpan());
-            LogMsg("AP: New NetworkInfo created.");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AP: New NetworkInfo created.");
         }
 
         protected override RadioPacket GetAdvertisementFrame()
@@ -37,8 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
             advertisement.WriteHash();
-            LogMsg("AP: Created AdvertisementFrame: ", advertisement);
-            LogMsg($"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AP: Created AdvertisementFrame: \n{JsonHelper.Serialize<object>(advertisement, true)}");
+            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
             action.UpdateFrameCheckSequence();
@@ -55,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             {
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
-                    // LogMsg($"AP: Writing packet to file...");
+                    // Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AP: Writing packet to file...");
                     _parent._captureFileWriterDevice.SendPacket(radioPacket);
                 }
                 // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#overview
