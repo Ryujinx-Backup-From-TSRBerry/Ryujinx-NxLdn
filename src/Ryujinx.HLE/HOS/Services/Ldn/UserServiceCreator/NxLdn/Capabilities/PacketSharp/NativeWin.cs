@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Capabilities
 {
     public static class NativeWin
     {

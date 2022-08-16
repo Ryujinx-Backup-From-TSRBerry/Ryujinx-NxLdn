@@ -8,7 +8,7 @@ using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Common.SystemInterop;
-using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Capabilities;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.Ui.Common;
