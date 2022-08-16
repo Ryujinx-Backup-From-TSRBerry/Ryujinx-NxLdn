@@ -1,9 +1,8 @@
 using PacketDotNet;
 using PacketDotNet.Ieee80211;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.Memory;
-using Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Capabilities;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
@@ -61,11 +60,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
         public AdapterHandler(LibPcapLiveDevice adapter, bool storeCapture = false, bool debugMode = false) : base(storeCapture, debugMode)
         {
-            _adapter = adapter;;
+            _adapter = adapter;
 
             // NOTE: If this wasn't executed in main it will fail here.
             //       But if it was then there is no need for that call (since the caps are already set correctly).
-            if (OperatingSystem.IsLinux() && !Capabilities.InheritCapabilities())
+            if (OperatingSystem.IsLinux() && !Capabilities.Capabilities.InheritCapabilities())
             {
                 throw new SystemException("Raising capabilities failed");
             }

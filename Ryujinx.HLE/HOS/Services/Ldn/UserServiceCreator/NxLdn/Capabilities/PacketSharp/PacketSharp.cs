@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Capabilities
 {
     public class PacketSharp : IDisposable
     {

@@ -2,7 +2,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.NxLdn.Capabilities
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Capabilities
 {
     // This is only needed for Linux
     public static class Capabilities
