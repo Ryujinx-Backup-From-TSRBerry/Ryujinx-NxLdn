@@ -141,17 +141,24 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public byte[] Nonce
         {
-            get => PacketHeader.Skip(AdvertisementFields.NoncePosition).Take(AdvertisementFields.NonceLength).ToArray();
+            get
+            {
+                byte[] nonce = PacketHeader.Skip(AdvertisementFields.NoncePosition).Take(AdvertisementFields.NonceLength).ToArray();
+
+                Array.Resize(ref nonce, 0x10);
+
+                return nonce;
+            }
             set
             {
-                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.NonceLength)
+                if (value != null && value.Length > 0 && value.Length <= 0x10)
                 {
-                    Array.Resize<byte>(ref value, AdvertisementFields.NonceLength);
+                    Array.Resize(ref value, 0x10);
                     value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.NoncePosition);
                 }
                 else if (value == null)
                 {
-                    byte[] fillArr = new byte[AdvertisementFields.NonceLength];
+                    byte[] fillArr = new byte[0x10];
                     Array.Fill<byte>(fillArr, 0);
                     fillArr.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.NoncePosition);
                 }
@@ -361,7 +368,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public AdvertisementFrame()
         {
-            PacketHeader = new ByteArraySegment(new byte[1368]);
+            PacketHeader = new ByteArraySegment(new byte[0x554]);
             ActionFrameHeader actionHeader = HeaderFields.Action;
             MemoryMarshal.Write(PacketHeader.Bytes.AsSpan(PacketHeader.Offset), ref actionHeader);
             _isBodyEncrypted = false;

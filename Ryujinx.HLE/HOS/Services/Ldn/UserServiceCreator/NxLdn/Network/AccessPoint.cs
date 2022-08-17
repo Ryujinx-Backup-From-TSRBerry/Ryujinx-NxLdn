@@ -1,3 +1,4 @@
+using LibHac.Common;
 using PacketDotNet.Ieee80211;
 using Ryujinx.Common.Memory;
 using Ryujinx.Common.Logging;
@@ -22,26 +23,45 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AP: New NetworkInfo created.");
         }
 
-        protected override RadioPacket GetAdvertisementFrame()
-        {
-            byte[] nonce = BitConverter.GetBytes(_parent._random.Next(0x10000000));
-            RadioPacket radioPacket = new RadioPacket();
+        protected override RadioPacket GetAdvertisementFrame() => new RadioPacket();
 
+        private ushort SequenceNumber = 1;
+
+        public RadioPacket GenerateAdvertissementFrame(bool useSequenceNumber = true)
+        {
             ActionFrame action = new ActionFrame(_parent._adapter.MacAddress, broadcastAddr, broadcastAddr);
+
+            if (useSequenceNumber)
+            {
+                action.SequenceControl = new SequenceControlField((ushort)(++SequenceNumber << 4));
+            }
+            else
+            {
+                action.SequenceControl = new SequenceControlField(0);
+            }
+
             AdvertisementFrame advertisement = new AdvertisementFrame()
             {
                 Header = _parent._networkInfo.NetworkId,
                 Encryption = 2, // can be 1(plain) or 2(AES-CTR) -> https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-payload
                 Info = NxLdnNetworkInfo.FromLdnNetworkInfo(_parent._networkInfo.Ldn),
-                Nonce = nonce,
+                Nonce = BitConverter.GetBytes(_parent._random.Next(0x10000000)),
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
+
             advertisement.WriteHash();
             // LogMsg("AP: Created AdvertisementFrame: ", advertisement);
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
             action.UpdateFrameCheckSequence();
+
+            RadioPacket radioPacket = new RadioPacket();
+
+            radioPacket.Add(new FlagsRadioTapField());
+            radioPacket.Add(new ChannelRadioTapField());
+            radioPacket.Add(new DbmAntennaSignalRadioTapField(-35));
+
             radioPacket.PayloadPacket = action;
             radioPacket.UpdateCalculatedValues();
 
@@ -50,8 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         protected override void SpamActionFrame()
         {
-            RadioPacket radioPacket = GetAdvertisementFrame();
-            byte[] ssid = new byte[32];
+            /*byte[] ssid = new byte[32];
             Array.Fill<byte>(ssid, 0);
             InformationElementList infoList = new InformationElementList();
             infoList.Add(new InformationElement(InformationElement.ElementId.ServiceSetIdentity, ssid));
@@ -65,6 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             infoList.Add(new InformationElement(InformationElement.ElementId.ExtendedSupportedRates, new byte[] { 0x0c, 0x12, 0x18, 0x60 }));
             // NOTE: missing extended caps
             BeaconFrame beaconFrame = new BeaconFrame(_parent._adapter.MacAddress, _parent._adapter.MacAddress, infoList);
+
             beaconFrame.BeaconInterval = 100;
             beaconFrame.CapabilityInformation = new CapabilityInformationField
             {
@@ -75,20 +95,32 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             };
             beaconFrame.UpdateFrameCheckSequence();
             RadioPacket beaconPacket = new RadioPacket();
-            beaconPacket.PayloadPacket = beaconFrame;
+            beaconPacket.PayloadPacket = beaconFrame;*/
+
             while (_parent._adapter.Opened)
             {
-                beaconPacket.UpdateCalculatedValues();
-                _parent._adapter.SendPacket(beaconPacket);
+                //beaconPacket.UpdateCalculatedValues();
+                //_parent._adapter.SendPacket(beaconPacket);
+
+                //Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"beaconPacket Sent");
+                RadioPacket radioPacket = GenerateAdvertissementFrame();
                 radioPacket.UpdateCalculatedValues();
                 _parent._adapter.SendPacket(radioPacket);
+
+                RadioPacket radioPacket2 = GenerateAdvertissementFrame(false);
+                radioPacket.UpdateCalculatedValues();
+                _parent._adapter.SendPacket(radioPacket2);
+
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"radioPacket Sent");
+
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
                     // LogMsg($"AP: Writing packet to file...");
-                    _parent._captureFileWriterDevice.SendPacket(beaconPacket);
+                    //_parent._captureFileWriterDevice.SendPacket(beaconPacket);
                     _parent._captureFileWriterDevice.SendPacket(radioPacket);
                 }
                 // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#overview
+
                 Thread.Sleep(100);
             }
         }

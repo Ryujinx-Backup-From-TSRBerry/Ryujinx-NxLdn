@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu
 {
-class RyuLdnProtocol
+    class RyuLdnProtocol
     {
         private const byte CurrentProtocolVersion = 1;
         private const int  Magic                  = ('R' << 0) | ('L' << 8) | ('D' << 16) | ('N' << 24);
