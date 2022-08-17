@@ -5,6 +5,7 @@ using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
+using System;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
@@ -37,12 +38,15 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
             sessionId.AsSpan()[..16].CopyTo(_parent._networkInfo.NetworkId.SessionId.AsSpan());
 
-            _parent._networkInfo.Common.Ssid.Length = (byte)32;
+            _parent._networkInfo.Common.Ssid.Length = 16;
             _parent._networkInfo.Common.Ssid.Name = ssid;
             _parent._networkInfo.Common.Channel = request.NetworkConfig.Channel == 0 ? (ushort)1 : request.NetworkConfig.Channel;
             _parent._networkInfo.Common.LinkLevel = 3;
             _parent._networkInfo.Common.NetworkType = 2;
-            // _parent._networkInfo.Ldn.AuthenticationId = (ulong)_parent._random.NextInt64();
+            Array16<byte> securityParam = new();
+            _parent._random.NextBytes(securityParam.AsSpan());
+            _parent._networkInfo.Ldn.SecurityParameter = securityParam;
+            _parent._networkInfo.Ldn.AuthenticationId = (ulong)_parent._random.NextInt64();
             _parent._networkInfo.Ldn.NodeCount = 1;
             _parent._networkInfo.Ldn.NodeCountMax = request.NetworkConfig.NodeCountMax;
             _parent._networkInfo.Ldn.Nodes[0].Ipv4Address = NetworkHelpers.ConvertIpv4Address(IPAddress.Parse($"169.254.{networkId}.1"));
@@ -50,8 +54,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             _parent._networkInfo.Ldn.Nodes[0].LocalCommunicationVersion = request.NetworkConfig.LocalCommunicationVersion;
             _parent._networkInfo.Ldn.Nodes[0].UserName = request.UserConfig.UserName;
             _parent._networkInfo.Ldn.SecurityMode = ((ushort)request.SecurityConfig.SecurityMode);
-
-            request.SecurityConfig.Passphrase.AsSpan()[..16].CopyTo(_parent._networkInfo.Ldn.SecurityParameter.AsSpan());
 
             for (byte i = 0; i < _parent._networkInfo.Ldn.Nodes.Length; i++)
             {

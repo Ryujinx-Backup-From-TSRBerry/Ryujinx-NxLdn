@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                     {
                         Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"NxLdnClient Found matching adapter: {device.Name} {device.Interface.Name}");
 
-                        _adapterHandler = new AdapterHandler(device);
+                        _adapterHandler = new AdapterHandler(device, true);
 
                         break;
                     }
