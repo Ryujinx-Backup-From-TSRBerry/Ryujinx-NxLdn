@@ -6,6 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
     public static class EncryptionHelper
     {
         private static KeySet _keySet;
+        private static byte[] DataKeySource = { 0xf1, 0xe7, 0x01, 0x84, 0x19, 0xa8, 0x4f, 0x71, 0x1d, 0xa7, 0x14, 0xc2, 0xcf, 0x91, 0x9c, 0x9c };
 
         public static void Initialize(KeySet keySet)
         {
@@ -37,6 +38,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             LibHac.Crypto.Sha256.GenerateSha256Hash(input, hash);
             // LogMsg("Sha256: ", hash.ToArray());
             return DecryptKey(hash[..16], key).ToArray();
+        }
+
+        public static Span<byte> GenerateDataKey(byte[] key, byte[] passphrase)
+        {
+            Array.Resize(ref key, key.Length + passphrase.Length);
+            passphrase.CopyTo(key, key.Length);
+
+            return DeriveKey(key, DataKeySource);
         }
     }
 }
