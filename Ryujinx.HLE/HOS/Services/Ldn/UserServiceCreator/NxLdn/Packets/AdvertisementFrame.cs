@@ -18,7 +18,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
     // Length: 1364 | in Ryujinx: 1368
     internal sealed class AdvertisementFrame
     {
-
         private static readonly byte[] AdvertisementKeySource = { 0x19, 0x18, 0x84, 0x74, 0x3e, 0x24, 0xc7, 0x7d, 0x87, 0xc6, 0x9e, 0x42, 0x07, 0xd0, 0xc4, 0x38 };
 
         // For PacketDotNet.Packet implementations this would usually be called Header
@@ -144,21 +143,22 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             get
             {
                 byte[] nonce = PacketHeader.Skip(AdvertisementFields.NoncePosition).Take(AdvertisementFields.NonceLength).ToArray();
-
+                // Needs to be aligned on 16 bytes to ensure correct crypto
                 Array.Resize(ref nonce, 0x10);
 
                 return nonce;
             }
             set
             {
-                if (value != null && value.Length > 0 && value.Length <= 0x10)
+                // NOTE: When preparing the a frame for wireless transmission we need to use the original length
+                if (value != null && value.Length > 0 && value.Length <= AdvertisementFields.NonceLength)
                 {
-                    Array.Resize(ref value, 0x10);
+                    Array.Resize(ref value, AdvertisementFields.NonceLength);
                     value.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.NoncePosition);
                 }
                 else if (value == null)
                 {
-                    byte[] fillArr = new byte[0x10];
+                    byte[] fillArr = new byte[AdvertisementFields.NonceLength];
                     Array.Fill<byte>(fillArr, 0);
                     fillArr.CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.NoncePosition);
                 }

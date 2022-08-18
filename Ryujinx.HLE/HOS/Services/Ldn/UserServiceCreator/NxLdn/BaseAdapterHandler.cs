@@ -19,18 +19,23 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 {
     abstract class BaseAdapterHandler : IDisposable
     {
-        internal ushort[] _channels = { 1, 6, 11 };
+        internal ushort[]      _channels = { 1, 6, 11 };
+        protected readonly int _scanDwellTime = 110;
 
-        internal bool        _storeCapture = false;
-        internal bool        _debugMode = false;
-        internal Random      _random = new Random();
-        internal ushort      _currentChannel;
-        internal NetworkInfo _networkInfo;
-        internal byte[]      _gameVersion;
+        internal bool          _storeCapture = false;
+        internal bool          _debugMode = false;
+        internal Random        _random = new Random();
+        internal ushort        _currentChannel;
+        internal NetworkInfo   _networkInfo;
+        internal byte[]        _gameVersion;
 
         internal CaptureFileWriterDevice _captureFileWriterDevice;
 
         internal List<NetworkInfo> _scanResults = new List<NetworkInfo>();
+
+        internal ushort GetRandomChannel() {
+            return _channels[_random.Next(_channels.Length)];
+        }
 
         private static NetworkInfo GetEmptyNetworkInfo()
         {

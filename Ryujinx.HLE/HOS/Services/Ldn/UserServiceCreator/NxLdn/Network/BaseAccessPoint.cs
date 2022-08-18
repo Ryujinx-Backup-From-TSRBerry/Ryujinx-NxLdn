@@ -6,6 +6,7 @@ using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
@@ -14,10 +15,20 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 {
     internal abstract class BaseAccessPoint
     {
+        protected static readonly SortedList<ushort, ushort> channelMap = new SortedList<ushort, ushort>() {
+            {1, 2412},
+            {6, 2437},
+            {11, 2462},
+            {36, 5180},
+            {40, 5200},
+            {44, 5220},
+            {48, 5240}
+        };
         protected static readonly PhysicalAddress broadcastAddr = new PhysicalAddress(new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff });
         private BaseAdapterHandler _parent;
         protected PacketArrivalEventHandler _eventHandler;
         private Thread t;
+        protected ushort SequenceNumber = 0;
 
         protected virtual void OnPacketArrival(object s, PacketCapture e)
         {
@@ -40,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
             _parent._networkInfo.Common.Ssid.Length = 16;
             _parent._networkInfo.Common.Ssid.Name = ssid;
-            _parent._networkInfo.Common.Channel = request.NetworkConfig.Channel == 0 ? (ushort)1 : request.NetworkConfig.Channel;
+            _parent._networkInfo.Common.Channel = request.NetworkConfig.Channel == 0 ? _parent.GetRandomChannel() : request.NetworkConfig.Channel;
             _parent._networkInfo.Common.LinkLevel = 3;
             _parent._networkInfo.Common.NetworkType = 2;
             Array16<byte> securityParam = new();
@@ -61,7 +72,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             }
         }
 
-        protected abstract RadioPacket GetAdvertisementFrame();
+        protected abstract BeaconFrame GetBeaconFrame();
+
+        protected abstract ActionFrame GetAdvertisementFrame();
 
         protected abstract void SpamActionFrame();
 
