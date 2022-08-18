@@ -24,10 +24,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AP: New NetworkInfo created.");
         }
 
-        protected override RadioPacket GetAdvertisementFrame()
+        protected override ActionFrame GetAdvertisementFrame()
         {
             byte[] nonce = BitConverter.GetBytes(_parent._random.Next(0x10000000));
-            RadioPacket radioPacket = new RadioPacket();
 
             ActionFrame action = new ActionFrame(_macAddress, broadcastAddr, broadcastAddr);
             AdvertisementFrame advertisement = new AdvertisementFrame()
@@ -43,18 +42,23 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();
-            action.UpdateFrameCheckSequence();
-            radioPacket.PayloadPacket = action;
-            radioPacket.UpdateCalculatedValues();
 
-            return radioPacket;
+            return action;
         }
 
         protected override void SpamActionFrame()
         {
-            RadioPacket radioPacket = GetAdvertisementFrame();
+            RadioPacket radioPacket = new RadioPacket();
+            ActionFrame action = GetAdvertisementFrame();
+
+            action.UpdateFrameCheckSequence();
+
             while (_parent._adapter.Opened)
             {
+                action.SequenceControl = new SequenceControlField((ushort)(++SequenceNumber << 4));
+                radioPacket.PayloadPacket = action;
+                radioPacket.UpdateCalculatedValues();
+
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
                     // Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AP: Writing packet to file...");
@@ -63,6 +67,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#overview
                 Thread.Sleep(100);
             }
+        }
+
+        protected override BeaconFrame GetBeaconFrame()
+        {
+            throw new NotImplementedException();
         }
 
         public DebugAccessPoint(DebugAdapterHandler handler) : base(handler)
