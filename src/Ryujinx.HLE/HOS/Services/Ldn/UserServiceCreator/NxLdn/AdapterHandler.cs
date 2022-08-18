@@ -93,17 +93,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             // Register our handler function to the "packet arrival" event.
             _adapter.OnPacketArrival += new PacketArrivalEventHandler(OnPacketArrival);
-
-            _adapter.StartCapture();
         }
 
         public override bool CreateNetwork(CreateAccessPointRequest request, out NetworkInfo networkInfo)
         {
-            if (_adapter.Started)
-            {
-                _adapter.StopCapture();
-            }
-
             _accessPoint = new Network.AccessPoint(this);
             _accessPoint.BuildNewNetworkInfo(request);
 
@@ -175,14 +168,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 }
             }
 
-            if (!_adapter.Started)
-            {
-                _adapter.StartCapture();
-            }
+            _scanResults.Clear();
+            _adapter.StartCapture();
 
             // NOTE: Using _adapter.StartCapture() and _adapter.StartCapture() in a small delay doesn't seems to be handled correctly under windows.
             //       Capture a large amount of packet could avoid this issue without speed issues.
             //_adapter.Capture(256);
+
+            Thread.Sleep(_scanDwellTime);
 
             if (_scanResults.Count > 0)
             {
@@ -195,11 +188,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         public override void DisconnectAndStop()
         {
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdapterHandler cleaning up...");
-            
-            _scanResults.Clear();
-            
-            if (_adapter.Started)
-            {
+            if (_adapter.Started) {
                 _adapter.StopCapture();
             }
 
@@ -209,7 +198,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
             }
         }
 
-        public override void DisconnectNetwork() { }
+        public override void DisconnectNetwork() {
+            // TODO: Figure out why starting and stopping packet capture
+            //       every 100ms leads to issues on windows
+            _adapter.StopCapture();
+         }
 
         public override void Dispose()
         {
