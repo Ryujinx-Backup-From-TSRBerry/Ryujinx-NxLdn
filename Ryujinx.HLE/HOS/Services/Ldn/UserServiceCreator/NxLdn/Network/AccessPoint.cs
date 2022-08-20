@@ -24,20 +24,18 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         protected override BeaconFrame GetBeaconFrame()
         {
-            // byte[] ssid = new byte[32];
-            // Array.Fill<byte>(ssid, 0);
             InformationElementList infoList = new InformationElementList();
-            // infoList.Add(new InformationElement(InformationElement.ElementId.ServiceSetIdentity, ssid));
-            // Supported Rates: 1B, 2B, 5.5B, 11B, 18Mbit, 24Mbit, 36Mbit, 54Mbit
-            infoList.Add(new InformationElement(InformationElement.ElementId.SupportedRates, new byte[] { 0x82, 0x84, 0x8b, 0x96, 0x24, 0x30, 0x48, 0x6c }));
-            // DS Parameter Set: Current Channel -> value
-            infoList.Add(new InformationElement(InformationElement.ElementId.DsParameterSet, new byte[] { (byte)_parent._networkInfo.Common.Channel }));
-            // Country info: Code: JP, Env: Any, First channel: 1, Number of channels: 13, Max transmit power level: 20dBm
-            infoList.Add(new InformationElement(InformationElement.ElementId.Country, new byte[] { 0x4a, 0x50, 0x20, 0x01, 0x0d, 0x14 }));
-            // Extended Supported Rates: 6, 9, 12, 48 [Mbit/s]
-            infoList.Add(new InformationElement(InformationElement.ElementId.ExtendedSupportedRates, new byte[] { 0x0c, 0x12, 0x18, 0x60 }));
-            infoList.Add(new InformationElement(InformationElement.ElementId.TrafficIndicationMap, new byte[] { 0x00, 0x03, 0x00, 0x00 }));
-            // NOTE: missing extended caps
+            // optional: Supported Rates: 1B, 2B, 5.5B, 11B, 18Mbit, 24Mbit, 36Mbit, 54Mbit
+            // infoList.Add(new InformationElement(InformationElement.ElementId.SupportedRates, new byte[] { 0x82, 0x84, 0x8b, 0x96, 0x24, 0x30, 0x48, 0x6c }));
+            // optional: DS Parameter Set: Current Channel -> value
+            // infoList.Add(new InformationElement(InformationElement.ElementId.DsParameterSet, new byte[] { (byte)_parent._networkInfo.Common.Channel }));
+            // optional: Country info: Code: JP, Env: Any, First channel: 1, Number of channels: 13, Max transmit power level: 20dBm
+            // infoList.Add(new InformationElement(InformationElement.ElementId.Country, new byte[] { 0x4a, 0x50, 0x20, 0x01, 0x0d, 0x14 }));
+            // optional: Extended Supported Rates: 6, 9, 12, 48 [Mbit/s]
+            // infoList.Add(new InformationElement(InformationElement.ElementId.ExtendedSupportedRates, new byte[] { 0x0c, 0x12, 0x18, 0x60 }));
+            // optional: Traffic Indication Map: DTIM 1 of 3
+            // infoList.Add(new InformationElement(InformationElement.ElementId.TrafficIndicationMap, new byte[] { 0x00, 0x03, 0x00, 0x00 }));
+            // NOTE: (optional) missing extended caps
             BeaconFrame beaconFrame = new BeaconFrame(_parent._adapter.MacAddress, _parent._adapter.MacAddress, infoList);
 
             beaconFrame.BeaconInterval = 100;
@@ -46,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 IsEss = true,
                 Privacy = true,
                 ShortTimeSlot = true
-                // NOTE: missing Spectrum management
+                // NOTE: (optional) missing Spectrum management
             };
             beaconFrame.UpdateFrameCheckSequence();
 
@@ -99,14 +97,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 actionPacket.UpdateCalculatedValues();
 
                 _parent._adapter.SendPacket(beaconPacket);
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"beaconPacket Sent");
+                // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"beaconPacket Sent");
                 _parent._adapter.SendPacket(actionPacket);
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"radioPacket Sent");
+                // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"radioPacket Sent");
 
                 if (_parent._storeCapture && _parent._captureFileWriterDevice.Opened)
                 {
                     // LogMsg($"AP: Writing packet to file...");
-                    //_parent._captureFileWriterDevice.SendPacket(beaconPacket);
+                    _parent._captureFileWriterDevice.SendPacket(beaconPacket);
                     _parent._captureFileWriterDevice.SendPacket(actionPacket);
                 }
                 // https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#overview
