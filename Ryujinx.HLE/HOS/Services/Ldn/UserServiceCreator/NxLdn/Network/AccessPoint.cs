@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
             return action;
         }
 
-        protected override void SpamActionFrame()
+        protected override void SendAdvertisementFrames()
         {
             RadioPacket beaconPacket = new RadioPacket();
             RadioPacket actionPacket = new RadioPacket();
