@@ -22,6 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
         internal ushort[]      _channels = { 1, 6, 11 };
         protected readonly int _scanDwellTime = 110;
 
+        internal ushort        _sequenceNumber = 0;
         internal bool          _storeCapture = false;
         internal bool          _debugMode = false;
         internal Random        _random = new Random();
@@ -155,7 +156,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                 {
                     case ActionFrame:
                         ActionFrame action = packet.Extract<ActionFrame>();
-                        Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnScanPacketArrival: Got RadioPacket from: {action.SourceAddress}");
+                        Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnScanPacketArrival: Got ActionFrame from: {action.SourceAddress}");
                         // ActionFrame HasPayloadData -> Action(?)
                         // LogMsg($"OnScanPacketArrival: Action Frame: [{action.TotalPacketLength}] {action.ToString(StringOutputType.VerboseColored)}");
                         // LogMsg($"Action Payload: {action.HasPayloadPacket} / Action Data: {action.HasPayloadData}");

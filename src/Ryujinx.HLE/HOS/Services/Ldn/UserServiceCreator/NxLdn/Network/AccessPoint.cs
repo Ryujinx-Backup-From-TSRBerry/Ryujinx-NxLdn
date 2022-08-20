@@ -88,8 +88,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
             while (_parent._adapter.Opened)
             {
-                beacon.SequenceControl = new SequenceControlField((ushort)(++SequenceNumber << 4));
-                action.SequenceControl = new SequenceControlField((ushort)(++SequenceNumber << 4));
+                beacon.SequenceControl = new SequenceControlField((ushort)(++_parent._sequenceNumber << 4));
+                action.SequenceControl = new SequenceControlField((ushort)(++_parent._sequenceNumber << 4));
                 beacon.Timestamp = ((ulong)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
                 beaconPacket.PayloadPacket = beacon;
                 actionPacket.PayloadPacket = action;
