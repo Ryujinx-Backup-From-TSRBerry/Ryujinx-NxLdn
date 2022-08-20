@@ -28,7 +28,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
         private BaseAdapterHandler _parent;
         protected PacketArrivalEventHandler _eventHandler;
         private Thread t;
-        protected ushort SequenceNumber = 0;
 
         protected virtual void OnPacketArrival(object s, PacketCapture e)
         {
