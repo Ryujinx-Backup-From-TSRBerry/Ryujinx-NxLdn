@@ -76,13 +76,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
 
         protected abstract ActionFrame GetAdvertisementFrame();
 
-        protected abstract void SpamActionFrame();
+        protected abstract void SendAdvertisementFrames();
 
         public BaseAccessPoint(BaseAdapterHandler handler)
         {
             _parent = handler;
             _eventHandler = new PacketArrivalEventHandler(OnPacketArrival);
-            t = new Thread(new ThreadStart(SpamActionFrame));
+            t = new Thread(new ThreadStart(SendAdvertisementFrames));
         }
 
         public bool Start()
