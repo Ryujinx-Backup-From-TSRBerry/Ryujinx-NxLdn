@@ -153,7 +153,7 @@ namespace Ryujinx.Ui.App.Common
 
                 IEnumerable<LdnGameData> ldnGameDataArray = Array.Empty<LdnGameData>();
 
-                if (ConfigurationState.Instance.Multiplayer.Mode == MultiplayerMode.RyuLdn)
+                if (ConfigurationState.Instance.Multiplayer.Mode == MultiplayerMode.LdnRyu)
                 {
                     try
                     {
