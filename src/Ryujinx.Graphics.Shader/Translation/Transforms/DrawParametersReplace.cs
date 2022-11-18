@@ -16,16 +16,12 @@ namespace Ryujinx.Graphics.Shader.Translation.Transforms
         {
             Operation operation = (Operation)node.Value;
 
-            if (context.GpuAccessor.QueryHasConstantBufferDrawParameters())
+            if (context.GpuAccessor.QueryHasConstantBufferDrawParameters() || HasConstantBufferDrawParameters(operation))
             {
                 if (ReplaceConstantBufferWithDrawParameters(node, operation))
                 {
                     context.UsedFeatures |= FeatureFlags.DrawParameters;
                 }
-            }
-            else if (HasConstantBufferDrawParameters(operation))
-            {
-                context.UsedFeatures |= FeatureFlags.DrawParameters;
             }
 
             return node;
