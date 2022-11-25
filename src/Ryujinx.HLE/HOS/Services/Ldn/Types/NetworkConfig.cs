@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Ryujinx.Common.Memory;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.Types
 {
@@ -10,7 +11,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.Types
         public byte NodeCountMax;
         public byte Reserved1;
         public ushort LocalCommunicationVersion;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
-        public byte[] Reserved2;
+        public Array10<byte> Reserved2;
     }
 }
