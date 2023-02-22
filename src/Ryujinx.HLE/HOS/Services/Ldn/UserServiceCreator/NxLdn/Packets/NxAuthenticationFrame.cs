@@ -5,6 +5,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -33,8 +34,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         private DataFrameHeader AuthHeader
         {
-            get => LdnHelper.FromBytes<DataFrameHeader>(PacketHeader.Take(NxAuthenticationFields.LdnHeaderLength).ToArray());
-            set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset);
+            get => MemoryMarshal.Read<DataFrameHeader>(PacketHeader.Take(NxAuthenticationFields.LdnHeaderLength).ToArray());
+            set => MemoryMarshal.Write(PacketHeader.Bytes.AsSpan(PacketHeader.Offset), ref value);
         }
 
         public byte Version
@@ -71,10 +72,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         // https://github.com/kinnay/LDN/blob/15ab244703eb949be9d7b24da95a26336308c8e9/ldn/__init__.py#L499
         public NetworkId Header
         {
-            get => LdnHelper.FromBytes<NetworkId>(
+            get => MemoryMarshal.Read<NetworkId>(
                     PacketHeader.Skip(NxAuthenticationFields.SessionInfoPosition).Take(NxAuthenticationFields.SessionInfoLength).ToArray()
                 );
-            set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + NxAuthenticationFields.SessionInfoPosition);
+            set => MemoryMarshal.Write(PacketHeader.Bytes.AsSpan(PacketHeader.Offset + NxAuthenticationFields.SessionInfoPosition), ref value);
         }
 
         public byte[] NetworkKey
@@ -112,12 +113,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             {
                 if (!IsResponse)
                 {
-                    return LdnHelper.FromBytes<AuthenticationRequest>(_payload);
+                    return MemoryMarshal.Read<AuthenticationRequest>(_payload);
                 }
                 else
                 {
                     if (Version >= 3)
-                        return LdnHelper.FromBytes<AuthenticationResponse>(_payload);
+                        return MemoryMarshal.Read<AuthenticationResponse>(_payload);
                     return null;
                 }
             }
@@ -126,14 +127,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 byte[] payload = _payload;
                 if (!IsResponse)
                 {
-                    LdnHelper.StructureToByteArray((AuthenticationRequest)value).CopyTo(payload, 0);
+                    // LdnHelper.StructureToByteArray((AuthenticationRequest)value).CopyTo(payload, 0);
                 }
                 else
                 {
                     // TODO: Adjust exception type + message
                     if (Version < 3)
                         throw new System.Exception("Version < 3");
-                    LdnHelper.StructureToByteArray((AuthenticationResponse)value).CopyTo(payload, 0);
+                    // LdnHelper.StructureToByteArray((AuthenticationResponse)value).CopyTo(payload, 0);
                 }
                 _payload = payload;
             }
@@ -147,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 {
                     if (Version >= 3)
                     {
-                        return LdnHelper.FromBytes<ChallengeRequestParameter>(_payload.Skip(NxAuthenticationFields.PayloadRequestChallengePosition).Take(NxAuthenticationFields.PayloadRequestChallengeLength).ToArray());
+                        return MemoryMarshal.Read<ChallengeRequestParameter>(_payload.Skip(NxAuthenticationFields.PayloadRequestChallengePosition).Take(NxAuthenticationFields.PayloadRequestChallengeLength).ToArray());
                     }
                     return default;
                 }
@@ -160,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
                 // TODO: Adjust exception type + message
                 if (IsResponse)
                     throw new System.Exception("IsResponse == true");
-                LdnHelper.StructureToByteArray(value).CopyTo(payload, NxAuthenticationFields.PayloadRequestChallengePosition);
+                MemoryMarshal.Write(payload.AsSpan(NxAuthenticationFields.PayloadRequestChallengePosition), ref value);
                 _payload = payload;
             }
         }
@@ -201,7 +202,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public static bool TryGetNxAuthenticationFrame(AuthenticationFrame data, out NxAuthenticationFrame authFrame)
         {
-            if (data.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Authentication)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Authentication)))
+            byte[] header = new byte[Marshal.SizeOf<DataFrameHeader>()];
+            DataFrameHeader headerStruct = HeaderFields.Authentication;
+            MemoryMarshal.Write(header, ref headerStruct);
+            if (data.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Authentication)).SequenceEqual(header))
             {
                 authFrame = new NxAuthenticationFrame(data.PayloadDataSegment);
                 return true;

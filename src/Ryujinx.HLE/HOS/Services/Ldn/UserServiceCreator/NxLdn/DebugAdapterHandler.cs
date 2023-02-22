@@ -2,7 +2,7 @@ using Ryujinx.Common.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using System;

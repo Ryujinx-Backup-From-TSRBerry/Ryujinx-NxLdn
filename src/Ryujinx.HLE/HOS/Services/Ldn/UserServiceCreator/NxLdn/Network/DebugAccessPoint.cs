@@ -3,7 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets;
 using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Types;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using SharpPcap;
 using System;
 using System.Net.NetworkInformation;
