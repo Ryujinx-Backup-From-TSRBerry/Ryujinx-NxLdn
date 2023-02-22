@@ -65,10 +65,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         private NetworkId _header
         {
-            get => LdnHelper.FromBytes<NetworkId>(
-                    PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray()
-                );
-            set => LdnHelper.StructureToByteArray(value).CopyTo(PacketHeader.Bytes, PacketHeader.Offset + AdvertisementFields.SessionInfoPosition);
+            get => MemoryMarshal.Read<NetworkId>(
+                    PacketHeader.Skip(AdvertisementFields.SessionInfoPosition).Take(AdvertisementFields.SessionInfoLength).ToArray());
+            set => MemoryMarshal.Write(PacketHeader.Bytes.AsSpan(PacketHeader.Offset + AdvertisementFields.SessionInfoPosition), ref value);
         }
 
         public NetworkId Header
@@ -285,7 +284,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             if (Encryption == 1)
                 return data;
 
-            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(_header), AdvertisementKeySource);
+            byte[] header = new byte[Marshal.SizeOf<NetworkId>()];
+            NetworkId headerStruct = _header;
+            MemoryMarshal.Write(header, ref headerStruct);
+
+            byte[] key = EncryptionHelper.DeriveKey(header, AdvertisementKeySource);
             // LogMsg($"Encrypt: Data length: {data.Length}");
             Span<byte> output = new Span<byte>(new byte[data.Length]);
             LibHac.Crypto.Aes.EncryptCtr128(data, output, key, Nonce);
@@ -297,8 +300,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             if (Encryption == 1)
                 return data;
 
+            byte[] header = new byte[Marshal.SizeOf<NetworkId>()];
+            NetworkId headerStruct = _header;
+            MemoryMarshal.Write(header, ref headerStruct);
             // LogMsg($"Decrypt: Data length: {data.Length}");
-            byte[] key = EncryptionHelper.DeriveKey(LdnHelper.StructureToByteArray(_header), AdvertisementKeySource);
+            byte[] key = EncryptionHelper.DeriveKey(header, AdvertisementKeySource);
             // LogMsg($"Key: ", key);
             Span<byte> output = new Span<byte>(new byte[data.Length]);
             LibHac.Crypto.Aes.DecryptCtr128(data, output, key, Nonce);
@@ -385,7 +391,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
 
         public static bool TryGetAdvertisementFrame(ActionFrame action, out AdvertisementFrame adFrame)
         {
-            if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(LdnHelper.StructureToByteArray(HeaderFields.Action)))
+            ActionFrameHeader actionFrameHeader = HeaderFields.Action;
+            byte[] actionHeader = new byte[Marshal.SizeOf<ActionFrameHeader>()];
+            MemoryMarshal.Write(actionHeader, ref actionFrameHeader);
+            if (action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).SequenceEqual(actionHeader))
             {
                 adFrame = new AdvertisementFrame(action.PayloadDataSegment);
                 adFrame.DecryptBody();
@@ -394,7 +403,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
             else
             {
                 LogMsg("Incorrect header:", action.PayloadDataSegment.Take(Marshal.SizeOf(HeaderFields.Action)).ToArray());
-                LogMsg("Expected header:", LdnHelper.StructureToByteArray(HeaderFields.Action));
+                LogMsg("Expected header:", actionHeader);
             }
             adFrame = null;
             return false;
