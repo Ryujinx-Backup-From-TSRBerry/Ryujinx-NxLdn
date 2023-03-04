@@ -1,16 +1,15 @@
 ﻿using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.LdnRyu.Types
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types
 {
-    [StructLayout(LayoutKind.Sequential, Size = 0xBC)]
-    struct ConnectPrivateRequest
+    [StructLayout(LayoutKind.Sequential, Size = 0x4FC)]
+    struct ConnectRequest
     {
         public SecurityConfig SecurityConfig;
-        public SecurityParameter SecurityParameter;
         public UserConfig UserConfig;
         public uint LocalCommunicationVersion;
         public uint OptionUnknown;
-        public NetworkConfig NetworkConfig;
+        public NetworkInfo NetworkInfo;
     }
 }
