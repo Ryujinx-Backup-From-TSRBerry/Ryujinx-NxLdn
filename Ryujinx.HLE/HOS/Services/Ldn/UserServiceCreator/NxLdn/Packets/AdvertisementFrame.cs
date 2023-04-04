@@ -30,8 +30,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Packets
         {
             if (obj != null)
             {
-                string jsonString = JsonHelper.Serialize<object>(obj, true);
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdvertisementFrame: " + msg + "\n" + jsonString);
+                // string jsonString = JsonHelper.Serialize<object>(obj, true);
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, "AdvertisementFrame: " + msg + "\n"); // + jsonString);
             }
             else
             {

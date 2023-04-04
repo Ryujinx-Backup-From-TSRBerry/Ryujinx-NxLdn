@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
                             if (BuildNetworkInfo(_currentChannel, action, adFrame, out NetworkInfo networkInfo))
                             {
-                                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Got networkInfo: \n{JsonHelper.Serialize<object>(networkInfo, true)}");
+                                // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"Got networkInfo: \n{JsonHelper.Serialize<object>(networkInfo, true)}");
                                 if (!_scanResults.Contains(networkInfo))
                                 {
                                     _scanResults.Add(networkInfo);
@@ -186,7 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
                         if (NxAuthenticationFrame.TryGetNxAuthenticationFrame(authFrame, out NxAuthenticationFrame nxAuthFrame))
                         {
                             Logger.Info?.PrintMsg(LogClass.ServiceLdn, "OnPacketArrival: Authentication packet header matches!");
-                            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnPacketArrival: AuthenticationFrame: \n{JsonHelper.Serialize<object>(nxAuthFrame, true)}");
+                            // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"OnPacketArrival: AuthenticationFrame: \n{JsonHelper.Serialize<object>(nxAuthFrame, true)}");
                         }
                         break;
                 }

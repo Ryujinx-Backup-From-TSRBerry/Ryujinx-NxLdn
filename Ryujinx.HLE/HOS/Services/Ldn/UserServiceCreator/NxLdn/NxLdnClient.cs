@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn
 
             if (_adapterHandler.CreateNetwork(request, out NetworkInfo networkInfo))
             {
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"NxLdnClient Network created: \n{JsonHelper.Serialize<object>(networkInfo, true)}");
+                // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"NxLdnClient Network created: \n{JsonHelper.Serialize<object>(networkInfo, true)}");
 
                 Config = new ProxyConfig
                 {
