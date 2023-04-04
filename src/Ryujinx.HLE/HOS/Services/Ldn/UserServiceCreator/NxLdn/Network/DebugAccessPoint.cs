@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Network
                 Version = 3 // can be 2(no auth token) or 3(with auth token) - https://github.com/kinnay/NintendoClients/wiki/LDN-Protocol#advertisement-data
             };
             advertisement.WriteHash();
-            Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AP: Created AdvertisementFrame: \n{JsonHelper.Serialize<object>(advertisement, true)}");
+            // Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AP: Created AdvertisementFrame: \n{JsonHelper.Serialize<object>(advertisement, true)}");
             Logger.Info?.PrintMsg(LogClass.ServiceLdn, $"AdvertisementFrame correct hash: {advertisement.CheckHash()}");
             // advertisement.LogProps();
             action.PayloadData = advertisement.Encode();

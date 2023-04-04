@@ -12,8 +12,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.NxLdn.Capabilities
         {
             if (obj != null)
             {
-                string jsonString = JsonHelper.Serialize<object>(obj, true);
-                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n" + jsonString);
+                // string jsonString = JsonHelper.Serialize<object>(obj, true);
+                Logger.Info?.PrintMsg(LogClass.ServiceLdn, msg + "\n"); // + jsonString);
             }
             else
             {
