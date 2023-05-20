@@ -26,6 +26,11 @@ on:
         description: "Additional command line options for 'dotnet publish'"
         required: false
         type: string
+      configName:
+        description: "Name with extension of the config file to use"
+        default: "Config.json"
+        required: false
+        type: string
       buildVersion:
         description: "Ryujinx version string"
         default: "1.1.0"
@@ -53,10 +58,15 @@ on:
 permissions:
   contents: write
 
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
 jobs:
   build:
-    name: ${{ matrix.os }} (${{ inputs.buildVersion }})
+    name: ${{ matrix.OS_NAME }} (${{ inputs.buildVersion }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -77,34 +87,43 @@ jobs:
 
       fail-fast: ${{ inputs.failFast }}
 
-    env:
-      POWERSHELL_TELEMETRY_OPTOUT: 1
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          global-json-file: global.json
+
       - name: Get version info
         id: version_info
         shell: bash
         run: |
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
+
+      - name: Configure for release
+        run: |
+          sed -r --in-place 's/\%\%RYUJINX_BUILD_VERSION\%\%/${{ inputs.buildVersion }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's/\%\%RYUJINX_BUILD_GIT_HASH\%\%/${{ steps.version_info.outputs.git_short_hash }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's/\%\%RYUJINX_CONFIG_FILE_NAME\%\%/${{ inputs.configName }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
+        shell: bash
+
       - name: Create output dir
         run: mkdir output
+
       - name: Publish (with SourceRevision)
         if: ${{ inputs.addSourceRevision }}
         shell: bash
         run: |
           dotnet publish -c "${{ inputs.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./gtk/publish -p:Version="${{ inputs.buildVersion }}" -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType="${{ inputs.debugType }}" --self-contained true Ryujinx ${{ inputs.extraOptions }}
           dotnet publish -c "${{ inputs.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./ava/publish -p:Version="${{ inputs.buildVersion }}" -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType="${{ inputs.debugType }}" --self-contained true Ryujinx.Ava ${{ inputs.extraOptions }}
+
       - name: Publish (without SourceRevision)
         if: ${{ ! inputs.addSourceRevision }}
         shell: bash
         run: |
           dotnet publish -c "${{ inputs.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./gtk/publish -p:Version="${{ inputs.buildVersion }}" -p:DebugType="${{ inputs.debugType }}" --self-contained true Ryujinx ${{ inputs.extraOptions }}
           dotnet publish -c "${{ inputs.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./ava/publish -p:Version="${{ inputs.buildVersion }}" -p:DebugType="${{ inputs.debugType }}" --self-contained true Ryujinx.Ava ${{ inputs.extraOptions }}
+
       - name: Package release
         shell: bash
         env:
@@ -116,6 +135,7 @@ jobs:
           pushd ava
           ${{ matrix.RELEASE_ARCHIVE_COMMAND }} ../output/ava-$RELEASE_ARCHIVE_NAME publish
           popd
+
       - name: Create/Update release
         uses: ncipollo/release-action@v1
         with:
@@ -128,3 +148,68 @@ jobs:
           replacesArtifacts: true
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
+
+  build_macos:
+    name: macOS universal (${{ inputs.buildVersion }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          global-json-file: global.json
+
+      - name: Setup LLVM 14
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 14
+
+      - name: Install rcodesign
+        run: |
+          mkdir -p $HOME/.bin
+          gh release download -R indygreg/apple-platform-rs -O apple-codesign.tar.gz -p 'apple-codesign-*-x86_64-unknown-linux-musl.tar.gz'
+          tar -xzvf apple-codesign.tar.gz --wildcards '*/rcodesign' --strip-components=1
+          rm apple-codesign.tar.gz
+          mv rcodesign $HOME/.bin/
+          echo "$HOME/.bin" >> $GITHUB_PATH
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version info
+        id: version_info
+        run: |
+          echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
+
+      - name: Configure for release
+        run: |
+          sed -r --in-place 's/\%\%RYUJINX_BUILD_VERSION\%\%/${{ inputs.buildVersion }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's/\%\%RYUJINX_BUILD_GIT_HASH\%\%/${{ steps.version_info.outputs.git_short_hash }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's/\%\%RYUJINX_CONFIG_FILE_NAME\%\%/${{ inputs.configName }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
+        shell: bash
+
+      - name: Publish macOS (with SourceRevision)
+        if: ${{ inputs.addSourceRevision }}
+        run: |
+          ./distribution/macos/create_macos_build.sh . publish_tmp publish_ava ./distribution/macos/entitlements.xml "${{ inputs.buildVersion }}" "${{ steps.version_info.outputs.git_short_hash }}" "${{ inputs.configuration }}"
+
+      - name: Publish macOS (without SourceRevision)
+        if: ${{ ! inputs.addSourceRevision }}
+        run: |
+          ./distribution/macos/create_macos_build.sh . publish_tmp publish_ava ./distribution/macos/entitlements.xml "${{ inputs.buildVersion }}" "" "${{ inputs.configuration }}"
+
+      - name: Pushing new release
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ inputs.name }}
+          body: "${{ toJson(inputs) }}"
+          artifacts: "publish_ava/*.tar.gz"
+          commit: ${{ github.sha }}
+          tag: ${{ inputs.tagName }}
+          omitBodyDuringUpdate: true
+          allowUpdates: true
+          replacesArtifacts: true
+          owner: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_OWNER }}
+          repo: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_REPO }}
+          token: ${{ secrets.RELEASE_TOKEN }}

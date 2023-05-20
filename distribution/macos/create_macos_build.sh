@@ -24,7 +24,7 @@ if [ "$VERSION" == "1.1.0" ];
 then
   RELEASE_TAR_FILE_NAME=test-ava-ryujinx-$CONFIGURATION-$VERSION+$SOURCE_REVISION_ID-macos_universal.app.tar
 else
-  RELEASE_TAR_FILE_NAME=test-ava-ryujinx-$VERSION-macos_universal.app.tar
+  RELEASE_TAR_FILE_NAME=ava-ryujinx-$VERSION-macos_universal.app.tar
 fi
 
 ARM64_APP_BUNDLE="$TEMP_DIRECTORY/output_arm64/Ryujinx.app"
