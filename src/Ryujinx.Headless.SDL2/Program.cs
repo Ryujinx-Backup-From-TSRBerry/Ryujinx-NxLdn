@@ -62,7 +62,7 @@ namespace Ryujinx.Headless.SDL2
 
         static void Main(string[] args)
         {
-            Version = ReleaseInformation.GetVersion();
+            Version = ReleaseInformation.Version;
 
             // Make process DPI aware for proper window sizing on high-res screens.
             ForceDpiAware.Windows();
@@ -428,8 +428,23 @@ namespace Ryujinx.Headless.SDL2
 
             if (!option.DisableFileLog)
             {
+                string logBasePath = AppDomain.CurrentDomain.BaseDirectory;
+
+                if (ReleaseInformation.IsValid)
+                {
+                    string oldLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+                    string newLogPath = Path.Combine(AppDataManager.BaseDirPath, "Logs");
+
+                    if (Directory.Exists(oldLogPath) && !Directory.Exists(newLogPath))
+                    {
+                        FileSystemUtils.MoveDirectory(oldLogPath, newLogPath);
+                    }
+
+                    logBasePath = AppDataManager.BaseDirPath;
+                }
+
                 Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(ReleaseInformation.GetBaseApplicationDirectory(), "file"),
+                    new FileLogTarget(logBasePath, "file"),
                     1000,
                     AsyncLogTargetOverflowAction.Block
                 ));

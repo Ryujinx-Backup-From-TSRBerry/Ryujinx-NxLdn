@@ -1,7 +1,10 @@
 ﻿using Ryujinx.Common;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Logging.Targets;
+using Ryujinx.Common.Utilities;
 using System;
+using System.IO;
 
 namespace Ryujinx.Ui.Common.Configuration
 {
@@ -9,6 +12,17 @@ namespace Ryujinx.Ui.Common.Configuration
     {
         public static void Initialize()
         {
+            if (ReleaseInformation.IsValid)
+            {
+                string oldLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+                string newLogPath = Path.Combine(AppDataManager.BaseDirPath, "Logs");
+
+                if (Directory.Exists(oldLogPath) && !Directory.Exists(newLogPath))
+                {
+                    FileSystemUtils.MoveDirectory(oldLogPath, newLogPath);
+                }
+            }
+
             ConfigurationState.Instance.Logger.EnableDebug.Event += ReloadEnableDebug;
             ConfigurationState.Instance.Logger.EnableStub.Event += ReloadEnableStub;
             ConfigurationState.Instance.Logger.EnableInfo.Event += ReloadEnableInfo;
@@ -80,8 +94,10 @@ namespace Ryujinx.Ui.Common.Configuration
         {
             if (e.NewValue)
             {
+                string logBasePath = ReleaseInformation.IsValid ? AppDataManager.BaseDirPath : AppDomain.CurrentDomain.BaseDirectory;
+
                 Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(ReleaseInformation.GetBaseApplicationDirectory(), "file"),
+                    new FileLogTarget(logBasePath, "file"),
                     1000,
                     AsyncLogTargetOverflowAction.Block
                 ));

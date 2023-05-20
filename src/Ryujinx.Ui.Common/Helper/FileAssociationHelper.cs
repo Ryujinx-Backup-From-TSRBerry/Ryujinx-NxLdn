@@ -11,21 +11,21 @@ namespace Ryujinx.Ui.Common.Helper
 {
     public static partial class FileAssociationHelper
     {
-        private static readonly string[] _fileExtensions = { ".nca", ".nro", ".nso", ".nsp", ".xci" };
+        private static readonly string[] FileExtensions = { ".nca", ".nro", ".nso", ".nsp", ".xci" };
 
         [SupportedOSPlatform("linux")]
-        private static readonly string _mimeDbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "mime");
+        private static readonly string MimeDbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "mime");
 
         private const int SHCNE_ASSOCCHANGED = 0x8000000;
         private const int SHCNF_FLUSH = 0x1000;
 
         [LibraryImport("shell32.dll", SetLastError = true)]
-        public static partial void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+        private static partial void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 
-        public static bool IsTypeAssociationSupported => (OperatingSystem.IsLinux() || OperatingSystem.IsWindows()) && !ReleaseInformation.IsFlatHubBuild();
+        public static bool IsTypeAssociationSupported => (OperatingSystem.IsLinux() || OperatingSystem.IsWindows()) && !ReleaseInformation.IsFlatHubBuild;
 
         [SupportedOSPlatform("linux")]
-        private static bool AreMimeTypesRegisteredLinux() => File.Exists(Path.Combine(_mimeDbPath, "packages", "Ryujinx.xml"));
+        private static bool AreMimeTypesRegisteredLinux() => File.Exists(Path.Combine(MimeDbPath, "packages", "Ryujinx.xml"));
 
         [SupportedOSPlatform("linux")]
         private static bool InstallLinuxMimeTypes(bool uninstall = false)
@@ -34,7 +34,7 @@ namespace Ryujinx.Ui.Common.Helper
 
             if ((uninstall && AreMimeTypesRegisteredLinux()) || (!uninstall && !AreMimeTypesRegisteredLinux()))
             {
-                string mimeTypesFile = Path.Combine(ReleaseInformation.GetBaseApplicationDirectory(), "mime", "Ryujinx.xml");
+                string mimeTypesFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mime", "Ryujinx.xml");
                 string additionalArgs = !uninstall ? "--novendor" : "";
 
                 using Process mimeProcess = new();
@@ -55,7 +55,7 @@ namespace Ryujinx.Ui.Common.Helper
                 using Process updateMimeProcess = new();
 
                 updateMimeProcess.StartInfo.FileName = "update-mime-database";
-                updateMimeProcess.StartInfo.Arguments = _mimeDbPath;
+                updateMimeProcess.StartInfo.Arguments = MimeDbPath;
 
                 updateMimeProcess.Start();
                 updateMimeProcess.WaitForExit();
@@ -90,7 +90,7 @@ namespace Ryujinx.Ui.Common.Helper
 
             bool registered = false;
 
-            foreach (string ext in _fileExtensions)
+            foreach (string ext in FileExtensions)
             {
                 registered |= CheckRegistering(ext);
             }
@@ -137,7 +137,7 @@ namespace Ryujinx.Ui.Common.Helper
 
             bool registered = false;
 
-            foreach (string ext in _fileExtensions)
+            foreach (string ext in FileExtensions)
             {
                 registered |= RegisterExtension(ext, uninstall);
             }
